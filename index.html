@@ -7,7 +7,7 @@
 <title>Funely · Prototipo</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Atkinson+Hyperlegible:wght@400;700&family=Lexend:wght@400;500;600;700&display=swap">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Lexend:wght@300;400;500;600;700&display=swap">
 <style>
 /* Layout: presenter shell (notas UX + teléfono) para la familia; intranet a ancho completo para el gestor. Tema claro deliberado. */
 :root{
@@ -19,7 +19,7 @@
   --ok:#22704A; --ok-50:#E6F3EC; --warn:#8F5300; --warn-50:#FFF3DE;
   --err:#B3261E; --err-50:#FCEAE8; --info:#255E9C; --info-50:#E8F0FA;
   --display:"Lexend", "Segoe UI", system-ui, sans-serif;
-  --body:"Atkinson Hyperlegible", "Segoe UI", system-ui, sans-serif;
+  --body:"Lexend", "Segoe UI", system-ui, sans-serif;
   --r:14px; --r-sm:10px;
 }
 *{box-sizing:border-box}
@@ -76,6 +76,7 @@ p{margin:0}
 .stepper li.done::before{background:var(--teal)}
 .stepper li.cur::before{background:linear-gradient(90deg,var(--teal) 50%,var(--teal-100) 50%)}
 .stepper li.cur{color:var(--ink);font-weight:700}
+.scroll>*{flex-shrink:0}
 .scroll{flex:1;overflow:auto;padding:8px 20px 24px;display:flex;flex-direction:column;gap:20px;scroll-behavior:smooth}
 .cta{padding:12px 20px calc(16px + env(safe-area-inset-bottom,0px));border-top:1px solid var(--line);background:var(--surface);display:flex;flex-direction:column;gap:8px}
 .btn{min-height:54px;border-radius:14px;border:0;padding:0 20px;font-family:var(--display);font-weight:600;font-size:17px;display:inline-flex;align-items:center;justify-content:center;gap:8px;width:100%}
@@ -237,6 +238,32 @@ p{margin:0}
 @keyframes tin{from{transform:translateY(10px);opacity:.4}to{transform:none;opacity:1}}
 .example{font-size:12px;color:var(--sand-700);background:var(--sand-50);border-radius:6px;padding:2px 8px;align-self:flex-start}
 
+/* ---------- Home ---------- */
+.hero{margin:-8px -20px 0;padding:22px 20px 26px;background:linear-gradient(180deg,var(--sand-50),var(--surface));display:flex;flex-direction:column;gap:14px;position:relative;overflow:hidden}
+.hero>*{position:relative}
+.hero .h1{font-size:30px}
+.hero .deco{position:absolute;right:-34px;top:-30px;width:150px;height:150px;opacity:.45;pointer-events:none}
+.cpbox{display:flex;gap:8px}.cpbox .input{flex:1;min-width:0}.cpbox .btn{flex:none;min-height:52px}
+.sec{display:flex;flex-direction:column;gap:12px}
+.sec .h2{font-size:22px}
+.sec>p{color:var(--ink-2)}
+.benefits{display:grid;gap:16px}
+.benefit{display:grid;grid-template-columns:44px 1fr;gap:12px;align-items:start}
+.benefit .ic{width:44px;height:44px;border-radius:12px;background:var(--teal-50);color:var(--teal);display:grid;place-items:center}
+.benefit strong{display:block;font-family:var(--display);font-weight:600;font-size:16.5px}
+.benefit p{font-size:15px;color:var(--ink-2)}
+.situ{display:grid;gap:10px}
+.situ strong{font-family:var(--display);font-weight:600;font-size:17px;display:block;margin-bottom:4px}
+.situ p{font-size:15px;color:var(--ink-2)}
+.faq details{border-bottom:1px solid var(--line)}
+.faq summary{min-height:52px;display:flex;align-items:center;justify-content:space-between;gap:12px;font-weight:600;cursor:pointer;list-style:none;padding:6px 0}
+.faq summary::-webkit-details-marker{display:none}
+.faq summary::after{content:"+";font-size:24px;font-weight:300;color:var(--teal);flex:none}
+.faq details[open] summary::after{content:"–"}
+.faq details p{padding:0 0 14px;color:var(--ink-2);font-size:15px}
+.foot{margin:8px -20px -24px;padding:24px 20px 28px;background:var(--teal-50);display:flex;flex-direction:column;gap:10px;font-size:14px;color:var(--ink-2)}
+.foot .links{display:flex;gap:16px;flex-wrap:wrap;font-size:13px}
+
 /* ---------- Admin ---------- */
 .admin{flex:1;display:grid;grid-template-columns:232px 1fr;min-height:0}
 .side{background:var(--surface);border-right:1px solid var(--line);padding:20px 14px;display:flex;flex-direction:column;gap:4px}
@@ -309,7 +336,8 @@ td.num{font-variant-numeric:tabular-nums}
 @media (max-width:900px){
   .stage{grid-template-columns:1fr;padding:0;gap:0}
   .notes{display:none}
-  .notes-mobile{display:block;padding:10px 16px;background:var(--sand-50);border-bottom:1px solid #F3DDB5}
+  .topbar{display:none}
+  .notes-mobile{display:none;padding:10px 16px;background:var(--sand-50);border-bottom:1px solid #F3DDB5}
   .notes-mobile summary{font-size:14px;font-weight:700;color:var(--sand-700);cursor:pointer;min-height:32px;display:flex;align-items:center}
   .notes-mobile ul{margin:6px 0 4px;padding-left:18px;font-size:14px;color:var(--ink-2)}
   .phone{width:100%;border:0;border-radius:0;box-shadow:none;height:auto;min-height:0;flex:1}
@@ -366,6 +394,8 @@ const I = {
   lock:'<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="5" y="11" width="14" height="10" rx="2"/><path d="M8 11V8a4 4 0 0 1 8 0v3"/></svg>',
   info:'<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M12 11v6M12 7.5v.5"/></svg>',
   alert:'<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 3l10 18H2z"/><path d="M12 10v4.5M12 17.5v.5"/></svg>',
+  mobile:'<svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="6" y="2.5" width="12" height="19" rx="2.5"/><path d="M10.5 18.5h3"/></svg>',
+  heart:'<svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 20s-7-4.4-7-10a4 4 0 0 1 7-2.6A4 4 0 0 1 19 10c0 5.6-7 10-7 10z"/></svg>',
   chev:'<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M6 9l6 6 6-6"/></svg>',
   clock:'<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/></svg>',
   euro:'<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="M17 6.5A7 7 0 1 0 17 17.5M4 10.5h9M4 13.5h9"/></svg>',
@@ -401,7 +431,7 @@ const SEED = [
 
 let S;
 function reset(){
-  S = {view:"user", screen:"inicio", exp:freshExp(), seeds:JSON.parse(JSON.stringify(SEED)), cpErr:"", docOpen:null, otp:"", otpSent:false, toast:null,
+  S = {view:"user", screen:"home", exp:freshExp(), seeds:JSON.parse(JSON.stringify(SEED)), cpErr:"", docOpen:null, otp:"", otpSent:false, toast:null,
        adminTab:"exp", sel:null, filter:"todos", q:"", reject:null};
 }
 reset();
@@ -438,12 +468,12 @@ function allExp(){ return (E().done.contacto?[E()]:[]).concat(S.seeds); }
 
 /* ======================= Notas UX ======================= */
 const FLOW = [
-  ["inicio","Precio por código postal"],["presupuesto","Presupuesto y modo"],["contacto","Área privada"],
+  ["home","Home y precio por CP"],["presupuesto","Presupuesto y modo"],["contacto","Área privada"],
   ["contratante","Datos del contratante"],["fallecido","Datos del fallecido"],["revision","Revisión de documentos"],
   ["firma","Firma con Signaturit"],["dni","Subida de DNI"],["area","Área privada"],["activar","Activación y pago"],["activado","Servicio activado"]
 ];
 const NOTES = {
-  inicio:["Un solo dato para empezar: el código postal. El precio aparece sin registro.","El teléfono 24 h está siempre visible para quien necesita ayuda inmediata.","Prueba otros CP: 08019, 46015, 41020, 29004 o uno sin cobertura (p. ej. 50001)."],
+  home:["Primera pantalla pensada para dos momentos: quien acaba de perder a alguien (teléfono 24 h arriba del todo) y quien quiere dejarlo previsto.","Explica qué es la incineración directa en lenguaje llano, sin eufemismos ni tecnicismos.","El precio se consulta en la misma pantalla con el código postal, sin registro.","Prueba otros CP: 08019, 46015, 41020, 29004 o uno sin cobertura (p. ej. 50001)."],
   presupuesto:["Precio cerrado con IVA y desglose de lo que incluye, con los mismos conceptos del contrato.","El CP determina tanatorio y crematorio, que se muestran para generar confianza.","La pregunta clave bifurca el flujo: servicio inmediato o previsión."],
   contacto:["Solo email y móvil. Sin contraseñas: acceso con enlace mágico o SMS.","A partir de aquí el expediente aparece en el panel del gestor (cámbiate a la vista Gestor)."],
   contratante:["“Escanear DNI” rellena nombre, apellidos y DNI, y además cuenta como DNI subido.","Los campos rellenados automáticamente se marcan en arena para revisarlos.","Email y teléfono vienen del paso anterior: nunca pedimos un dato dos veces."],
@@ -456,7 +486,7 @@ const NOTES = {
   activado:["Confirmación con lo que pasa a continuación y quién va a llamar.","En la vista Gestor el expediente pasa a “Activado · en Salesforce”."]
 };
 const STEP_OF = {presupuesto:0,contacto:1,contratante:1,fallecido:1,revision:2,firma:2,dni:3};
-const BACK = {presupuesto:"inicio",contacto:"presupuesto",contratante:"contacto",fallecido:"contratante",revision:"fallecido",firma:"revision",dni:"area",activar:"area"};
+const BACK = {presupuesto:"home",contacto:"presupuesto",contratante:"contacto",fallecido:"contratante",revision:"fallecido",firma:"revision",dni:"area",activar:"area"};
 
 /* ======================= Pantallas: familia ======================= */
 function field(id,label,path,val,{opt=false,type="text",mode="",auto=false,hint="",ac=""}={}){
@@ -467,23 +497,53 @@ function field(id,label,path,val,{opt=false,type="text",mode="",auto=false,hint=
 function chips(path,opts,cur){ return `<div class="chips" role="group">${opts.map(o=>`<button type="button" class="chip" data-act="set" data-path="${path}" data-val="${esc(o)}" aria-pressed="${cur===o}">${esc(o)}</button>`).join("")}</div>`; }
 
 const SCREENS = {
-inicio(){
-  const e=E();
+home(){
+  const e=E(), desde=Math.min(...Object.values(ZONAS).map(z=>z.pvp));
+  const ben=(ic,t,d)=>`<div class="benefit"><span class="ic">${ic}</span><div><strong>${t}</strong><p>${d}</p></div></div>`;
+  const faq=(q,a)=>`<details><summary>${q}</summary><p>${a}</p></details>`;
   return {body:`
-    <div class="stack"><span class="eyebrow">Incineración directa</span>
-    <h1 class="h1">Un servicio funerario sencillo, con precio cerrado.</h1>
-    <p class="lead">Consulta el precio en tu zona y contrátalo desde el móvil. Te acompañamos en cada paso.</p></div>
-    <div class="card tint stack-l">
-      ${field("cp","¿Dónde se realizará el servicio?","cp",e.cp,{mode:"numeric",hint:"Código postal del lugar de fallecimiento o del domicilio.",ac:"postal-code"})}
-      ${S.cpErr?`<div class="alert warn" role="alert">${I.info}<div><strong>Aún no damos servicio en ese código postal.</strong>Llámanos y te ayudamos a encontrar una opción: <span class="tel">900 000 000</span></div></div>`:""}
-    </div>
-    <div class="trust">
-      <div>${I.check} Precio cerrado, IVA incluido</div>
-      <div>${I.check} Todo online, sin desplazamientos</div>
-      <div>${I.check} Atención 24 h por teléfono y WhatsApp</div>
-    </div>
-    <div class="urgent">${I.phone}<div><strong>¿Necesitas ayuda ahora?</strong><span>Llámanos 24 h: <span class="tel">900 000 000</span></span></div></div>`,
-   cta:{label:"Ver el precio",act:"verPrecio",ok:()=>/^\d{5}$/.test(E().cp)}};
+    <section class="hero">
+      <svg class="deco" viewBox="0 0 10 10" aria-hidden="true"><path d="M5 0C5.5 3.4 6.6 4.5 10 5 6.6 5.5 5.5 6.6 5 10 4.5 6.6 3.4 5.5 0 5 3.4 4.5 4.5 3.4 5 0Z" fill="#EDC07C"/></svg>
+      <span class="eyebrow">Incineración directa · Precio cerrado</span>
+      <h1 class="h1">Despedir a quien quieres, sin más preocupaciones.</h1>
+      <p class="lead">Funely organiza la incineración de principio a fin por un precio cerrado. Tú lo gestionas desde el móvil, a tu ritmo. Del resto nos ocupamos nosotros.</p>
+      <div class="card stack" style="box-shadow:0 10px 28px -14px rgba(1,84,93,.35)">
+        <label class="flabel" for="cp">Consulta el precio en tu zona</label>
+        <div class="cpbox"><input class="input" id="cp" inputmode="numeric" maxlength="5" autocomplete="postal-code" placeholder="Código postal" data-bind="cp" value="${esc(e.cp)}"><button class="btn primary sm" data-act="verPrecio">Ver precio</button></div>
+        <span class="hint">Sin registro. Precio final con IVA.</span>
+        ${S.cpErr?`<div class="alert warn" role="alert">${I.info}<div><strong>Aún no damos servicio en ese código postal.</strong>Llámanos y te ayudamos a encontrar una opción: <span class="tel">900 000 000</span></div></div>`:""}
+      </div>
+    </section>
+    <div class="urgent">${I.phone}<div><strong>¿Acaba de fallecer un familiar?</strong><span>Llámanos, te atendemos ahora: <span class="tel">900 000 000</span></span></div></div>
+    <section class="sec"><h2 class="h2">Qué es Funely</h2>
+      <p>Una incineración directa es una despedida sencilla, sin velatorio ni ceremonia en el tanatorio. Recogemos a tu ser querido, hacemos todos los trámites y te entregamos sus cenizas.</p>
+      <p>Así decidís vosotros cómo, cuándo y dónde despediros, sin prisas y sin pagar por lo que no necesitáis.</p>
+    </section>
+    <section class="sec"><h2 class="h2">Por qué Funely</h2><div class="benefits">
+      ${ben(I.euro,"Precio cerrado desde "+fmt(desde)+" €","IVA incluido. Lo que ves es lo que pagas, sin extras ni letra pequeña.")}
+      ${ben(I.mobile,"Todo desde el móvil","Contratas, firmas y envías los documentos sin desplazarte ni hacer colas.")}
+      ${ben(I.doc,"Nos ocupamos de los trámites","Permisos, certificados e inscripción en el Registro Civil. No tienes que ir a ninguna oficina.")}
+      ${ben(I.heart,"Personas a tu lado, 24 h","Un asesor te acompaña por teléfono o WhatsApp en cada paso, también de noche y en festivos.")}
+    </div></section>
+    <section class="sec"><h2 class="h2">Cómo funciona</h2><ol class="steps-v">
+      <li><span class="n">1</span><div><strong>Consulta tu precio</strong><span>Solo necesitas el código postal.</span></div></li>
+      <li><span class="n">2</span><div><strong>Completa tus datos y firma</strong><span>Preparamos los documentos por ti. Firmas con el dedo, desde el móvil.</span></div></li>
+      <li><span class="n">3</span><div><strong>Nosotros nos ocupamos de todo</strong><span>Recogida, trámites, incineración y entrega de la urna.</span></div></li>
+    </ol></section>
+    <section class="sec"><h2 class="h2">Para cada momento</h2><div class="situ">
+      <div class="card sand"><strong>Si acaba de ocurrir</strong><p>En unos minutos lo tendrás todo firmado y un asesor te llamará para ponerlo en marcha. No tienes que hacerlo solo.</p></div>
+      <div class="card tint"><strong>Si quieres dejarlo previsto</strong><p>Ahorra a tu familia decisiones difíciles en un mal momento. Lo dejas firmado hoy y solo se activa cuando llegue el momento. No pagas nada hasta entonces.</p></div>
+    </div></section>
+    <section class="sec"><h2 class="h2">Qué incluye</h2><ul class="incl">${CONCEPTOS.map(c=>`<li>${I.check}${c}</li>`).join("")}</ul></section>
+    <section class="sec faq"><h2 class="h2">Preguntas frecuentes</h2><div>
+      ${faq("¿Hay velatorio?","La incineración directa no incluye velatorio. Si queréis una despedida, podéis hacerla después con las cenizas, en el lugar y el momento que elijáis.")}
+      ${faq("¿Cuándo se paga?","Si el servicio es inmediato, al activarlo. Si lo dejas previsto, no pagas nada hasta que se active.")}
+      ${faq("¿Qué documentos necesito?","Solo tu DNI y el de la persona fallecida. Puedes enviarlos con una foto desde el móvil. Del resto nos encargamos nosotros.")}
+      ${faq("¿Y si prefiero hablar con alguien?","Llámanos al 900 000 000 a cualquier hora. Te ayudamos por teléfono o hacemos el proceso contigo.")}
+      ${faq("¿Quién está detrás de Funely?","Funely es un servicio de Portal Funerario SLU. Trabajamos con tanatorios y crematorios autorizados en cada zona.")}
+    </div></section>
+    <footer class="foot">${logo(22)}<span>Teléfono 24 h: <span class="tel">900 000 000</span> · WhatsApp: <span class="tel">600 000 000</span></span><span class="links"><span>Aviso legal</span><span>Privacidad</span><span>Cookies</span></span></footer>`,
+   cta:{label:"Consultar mi precio",act:"verPrecio",ok:()=>/^\d{5}$/.test(E().cp)}};
 },
 presupuesto(){
   const e=E(), z=Z(); const base=z.pvp/1.21;
@@ -502,7 +562,7 @@ presupuesto(){
       <button type="button" class="choice" data-act="mode" data-val="inmediato" aria-pressed="${e.mode==="inmediato"}"><span class="dot"></span><span><strong>Sí, necesito el servicio ahora</strong><span>Firmas desde el móvil, lo activamos hoy y un asesor te llama en minutos.</span></span></button>
       <button type="button" class="choice" data-act="mode" data-val="prevision" aria-pressed="${e.mode==="prevision"}"><span class="dot"></span><span><strong>No, quiero dejarlo previsto</strong><span>Lo dejas firmado hoy y lo activas cuando llegue el momento. Pagas al activarlo.</span></span></button>
     </fieldset>`,
-   cta:{label:"Continuar",act:"go",to:"contacto",ok:()=>!!E().mode,hint:"Sin compromiso hasta que firmes."}};
+   cta:{label:"Continuar",act:"go",to:"contacto",ok:()=>!!E().mode,hint:E().mode?"Sin compromiso hasta que firmes.":"Indica abajo si ya se ha producido el fallecimiento."}};
 },
 contacto(){
   const e=E();
@@ -908,6 +968,8 @@ document.addEventListener("change",ev=>{
   if(t.dataset.bind&&t.type==="checkbox"){ setPath(t.dataset.bind,t.checked); updateCta(); }
   if(t.dataset.file&&t.files&&t.files[0]){ const w=t.dataset.file, e=E(); if(w==="C"){e.dniC="subido";e.dniCR="";} else {e.dniF="subido";e.dniFR="";} log(e,(w==="C"?"DNI del contratante":"DNI del fallecido")+" subido"); toast("Foto recibida. La revisaremos en breve."); }
 });
+function fromHash(){ if(location.hash==="#gestor") S.view="admin"; else if(location.hash==="#familia") S.view="user"; }
+fromHash(); window.addEventListener("hashchange",()=>{fromHash();render();});
 render();
 </script>
 
