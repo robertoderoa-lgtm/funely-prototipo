@@ -354,6 +354,20 @@ td.num{font-variant-numeric:tabular-nums}
   .hide-m{display:none}
 }
 @media (max-width:520px){ .seg{margin-left:0;width:100%} .seg button{flex:1;padding:8px 6px} .topbar .ghost{display:none} .dkv{grid-template-columns:110px 1fr} }
+/* ---------- Versión final en cualquier dispositivo ---------- */
+:root{--pad:max(20px,calc((100vw - 680px)/2))}
+.topbar,.notes,.notes-mobile{display:none!important}
+.stage{display:block!important;padding:0!important}
+.phone{width:100%!important;height:100dvh!important;min-height:0!important;border:0!important;border-radius:0!important;box-shadow:none!important}
+.apphead,.stepper,.cta,.scroll{padding-left:var(--pad);padding-right:var(--pad)}
+.apphead{border-bottom-color:var(--line)}
+.hero,.foot{margin-left:calc(-1*var(--pad));margin-right:calc(-1*var(--pad));padding-left:var(--pad);padding-right:var(--pad)}
+@media (min-width:900px){
+  .hero{padding-top:40px;padding-bottom:40px}
+  .hero .h1{font-size:42px}
+  .benefits,.situ{grid-template-columns:1fr 1fr}
+  .toast{left:auto;right:24px;max-width:380px}
+}
 </style>
 
 </head>
