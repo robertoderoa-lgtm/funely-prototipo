@@ -1,0 +1,915 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="robots" content="noindex">
+<title>Funely · Prototipo</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Atkinson+Hyperlegible:wght@400;700&family=Lexend:wght@400;500;600;700&display=swap">
+<style>
+/* Layout: presenter shell (notas UX + teléfono) para la familia; intranet a ancho completo para el gestor. Tema claro deliberado. */
+:root{
+  color-scheme: light;
+  --teal:#016D79; --teal-700:#01545D; --teal-50:#EAF4F5; --teal-100:#D2E8EA;
+  --sand:#EDC07C; --sand-50:#FCF5EA; --sand-700:#8A5A12;
+  --ink:#16313A; --ink-2:#4B6269; --ink-3:#6E8389;
+  --line:#DCE7E8; --bg:#F3F7F7; --surface:#FFFFFF; --frame:#22363C;
+  --ok:#22704A; --ok-50:#E6F3EC; --warn:#8F5300; --warn-50:#FFF3DE;
+  --err:#B3261E; --err-50:#FCEAE8; --info:#255E9C; --info-50:#E8F0FA;
+  --display:"Lexend", "Segoe UI", system-ui, sans-serif;
+  --body:"Atkinson Hyperlegible", "Segoe UI", system-ui, sans-serif;
+  --r:14px; --r-sm:10px;
+}
+*{box-sizing:border-box}
+html,body{height:100%}
+body{margin:0;background:var(--bg);color:var(--ink);font-family:var(--body);font-size:16px;line-height:1.5}
+button,input,select,textarea{font:inherit;color:inherit}
+button{cursor:pointer}
+:focus-visible{outline:3px solid var(--sand);outline-offset:2px;border-radius:6px}
+h1,h2,h3,h4{font-family:var(--display);margin:0;line-height:1.2;text-wrap:balance;color:var(--ink)}
+p{margin:0}
+.sr{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0)}
+@media (prefers-reduced-motion:reduce){*{transition:none!important;animation:none!important}}
+
+/* ---------- Presenter shell ---------- */
+.shell{min-height:100%;display:flex;flex-direction:column}
+.topbar{position:sticky;top:env(safe-area-inset-top,0px);z-index:30;background:var(--surface);border-bottom:1px solid var(--line);
+  display:flex;align-items:center;gap:12px;flex-wrap:wrap;padding:10px 16px}
+.logo{display:inline-flex;align-items:flex-start;font-family:var(--display);font-weight:700;color:var(--teal);letter-spacing:-.02em;font-size:24px;line-height:1}
+.logo svg{width:10px;height:10px;margin-left:1px;margin-top:-2px}
+.tag{font-size:12px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;color:var(--sand-700);background:var(--sand-50);border:1px solid #F3DDB5;padding:3px 8px;border-radius:99px}
+.seg{display:inline-flex;background:var(--teal-50);border-radius:12px;padding:4px;gap:4px;margin-left:auto}
+.seg button{border:0;background:transparent;padding:8px 14px;border-radius:9px;font-family:var(--display);font-weight:500;font-size:14px;color:var(--teal-700);min-height:40px}
+.seg button[aria-pressed="true"]{background:var(--surface);box-shadow:0 1px 3px rgba(1,84,93,.18);color:var(--ink)}
+.ghost{border:1px solid var(--line);background:var(--surface);border-radius:10px;padding:8px 12px;font-size:14px;min-height:40px;color:var(--ink-2)}
+.ghost:hover{border-color:var(--teal-100);color:var(--teal-700)}
+
+.stage{flex:1;display:grid;grid-template-columns:minmax(260px,330px) auto;justify-content:center;gap:40px;padding:28px 16px 40px;align-items:start}
+.notes{position:sticky;top:90px;display:flex;flex-direction:column;gap:18px;min-width:0}
+.notes h2{font-size:15px;text-transform:uppercase;letter-spacing:.08em;color:var(--ink-3);font-weight:600}
+.flowlist{list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:2px}
+.flowlist button{width:100%;text-align:left;border:0;background:transparent;border-radius:9px;padding:7px 10px;font-size:14px;color:var(--ink-2);display:flex;gap:10px;align-items:center}
+.flowlist button .n{font-family:var(--display);font-size:12px;width:22px;height:22px;border-radius:50%;display:grid;place-items:center;background:var(--teal-50);color:var(--teal-700);flex:none}
+.flowlist button[aria-current="true"]{background:var(--surface);color:var(--ink);box-shadow:0 1px 3px rgba(22,49,58,.08)}
+.flowlist button[aria-current="true"] .n{background:var(--teal);color:#fff}
+.flowlist button:hover{color:var(--ink)}
+.notecard{background:var(--surface);border:1px solid var(--line);border-radius:var(--r);padding:16px 18px}
+.notecard h3{font-size:16px;margin-bottom:8px}
+.notecard ul{margin:0;padding-left:18px;color:var(--ink-2);font-size:14.5px;display:flex;flex-direction:column;gap:6px}
+.notes-mobile{display:none}
+
+/* ---------- Phone ---------- */
+.phone{width:390px;height:min(820px,calc(100vh - 120px));min-height:640px;border:11px solid var(--frame);border-radius:46px;background:var(--surface);
+  overflow:hidden;box-shadow:0 30px 60px -20px rgba(22,49,58,.35),0 0 0 1px rgba(22,49,58,.06);position:relative;display:flex;flex-direction:column}
+.screen{flex:1;display:flex;flex-direction:column;min-height:0;position:relative;background:var(--surface)}
+.apphead{display:flex;align-items:center;gap:8px;padding:14px 16px 10px;border-bottom:1px solid transparent}
+.apphead .logo{font-size:22px}
+.iconbtn{width:44px;height:44px;border-radius:12px;border:0;background:transparent;display:grid;place-items:center;color:var(--ink)}
+.iconbtn:hover{background:var(--teal-50)}
+.help{margin-left:auto;display:inline-flex;align-items:center;gap:6px;border:1px solid var(--line);background:var(--surface);border-radius:99px;padding:7px 12px;font-size:14px;color:var(--teal-700);font-weight:700;min-height:40px}
+.stepper{padding:2px 20px 12px}
+.stepper ol{list-style:none;margin:0;padding:0;display:grid;grid-template-columns:repeat(4,1fr);gap:6px}
+.stepper li{font-size:12px;color:var(--ink-3);display:flex;flex-direction:column;gap:6px}
+.stepper li::before{content:"";height:5px;border-radius:5px;background:var(--line)}
+.stepper li.done::before{background:var(--teal)}
+.stepper li.cur::before{background:linear-gradient(90deg,var(--teal) 50%,var(--teal-100) 50%)}
+.stepper li.cur{color:var(--ink);font-weight:700}
+.scroll{flex:1;overflow:auto;padding:8px 20px 24px;display:flex;flex-direction:column;gap:20px;scroll-behavior:smooth}
+.cta{padding:12px 20px calc(16px + env(safe-area-inset-bottom,0px));border-top:1px solid var(--line);background:var(--surface);display:flex;flex-direction:column;gap:8px}
+.btn{min-height:54px;border-radius:14px;border:0;padding:0 20px;font-family:var(--display);font-weight:600;font-size:17px;display:inline-flex;align-items:center;justify-content:center;gap:8px;width:100%}
+.btn.primary{background:var(--teal);color:#fff}
+.btn.primary:hover{background:var(--teal-700)}
+.btn.primary:disabled{background:#B7CBCE;color:#F4F8F8;cursor:not-allowed}
+.btn.secondary{background:var(--teal-50);color:var(--teal-700)}
+.btn.outline{background:var(--surface);border:1.5px solid var(--line);color:var(--ink)}
+.btn.sm{min-height:44px;font-size:15px;width:auto;border-radius:11px;padding:0 14px}
+.linkbtn{border:0;background:none;color:var(--teal-700);font-weight:700;text-decoration:underline;text-underline-offset:3px;padding:6px 0;font-size:15px}
+.cta .hint{font-size:13px;color:var(--ink-3);text-align:center}
+
+.eyebrow{font-size:13px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:var(--teal)}
+.lead{color:var(--ink-2);font-size:16.5px}
+.h1{font-size:28px;font-weight:600;letter-spacing:-.01em}
+.h2{font-size:22px;font-weight:600}
+.stack{display:flex;flex-direction:column;gap:8px}
+.stack-l{display:flex;flex-direction:column;gap:14px}
+.card{border:1px solid var(--line);border-radius:var(--r);padding:16px;background:var(--surface)}
+.card.tint{background:var(--teal-50);border-color:var(--teal-100)}
+.card.sand{background:var(--sand-50);border-color:#F3DDB5}
+
+/* form */
+.field{display:flex;flex-direction:column;gap:6px}
+.field label,.flabel{font-weight:700;font-size:15px}
+.field .opt{font-weight:400;color:var(--ink-3)}
+.input{min-height:52px;border:1.5px solid #C9D8DA;border-radius:12px;padding:0 14px;background:var(--surface);font-size:17px;width:100%}
+.input:focus{border-color:var(--teal);outline:3px solid var(--teal-100);outline-offset:0}
+.input.auto{background:#FFFBF2;border-color:var(--sand)}
+.input.big{font-family:var(--display);font-size:24px;letter-spacing:.12em;min-height:60px}
+.hint{font-size:14px;color:var(--ink-3)}
+.row2{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+.row2>*{min-width:0}
+.chips{display:flex;flex-wrap:wrap;gap:8px}
+.chip{min-height:44px;border-radius:99px;border:1.5px solid #C9D8DA;background:var(--surface);padding:0 16px;font-size:15px}
+.chip[aria-pressed="true"]{background:var(--teal);border-color:var(--teal);color:#fff;font-weight:700}
+.check{display:flex;gap:12px;align-items:flex-start;padding:12px 0;font-size:15px;color:var(--ink-2);cursor:pointer}
+.check input{width:24px;height:24px;accent-color:var(--teal);flex:none;margin:0}
+.choice{display:flex;gap:14px;align-items:flex-start;text-align:left;width:100%;border:1.5px solid #C9D8DA;background:var(--surface);border-radius:var(--r);padding:16px}
+.choice .dot{width:22px;height:22px;border-radius:50%;border:2px solid #9FB6B9;flex:none;margin-top:2px;display:grid;place-items:center}
+.choice[aria-pressed="true"]{border-color:var(--teal);background:var(--teal-50);box-shadow:inset 0 0 0 1px var(--teal)}
+.choice[aria-pressed="true"] .dot{border-color:var(--teal)}
+.choice[aria-pressed="true"] .dot::after{content:"";width:10px;height:10px;border-radius:50%;background:var(--teal)}
+.choice strong{font-family:var(--display);font-weight:600;font-size:16.5px;display:block;color:var(--ink)}
+.choice span{font-size:14.5px;color:var(--ink-2)}
+
+.scan{display:flex;gap:14px;align-items:center}
+.scan .ic{width:48px;height:48px;border-radius:12px;background:var(--surface);display:grid;place-items:center;color:var(--teal);flex:none;border:1px solid var(--teal-100)}
+.scan p{font-size:14.5px;color:var(--ink-2)}
+.scan strong{display:block;color:var(--ink);font-size:15.5px}
+
+/* price */
+.price{font-family:var(--display);font-weight:700;font-size:46px;letter-spacing:-.02em;color:var(--teal-700);line-height:1;font-variant-numeric:tabular-nums}
+.price small{font-size:20px;font-weight:600}
+.incl{list-style:none;margin:0;padding:0;display:grid;gap:8px}
+.incl li{display:flex;gap:10px;align-items:flex-start;font-size:15.5px}
+.incl svg{color:var(--teal);flex:none;margin-top:3px}
+.kv{display:grid;grid-template-columns:auto 1fr;gap:6px 14px;font-size:15px}
+.kv dt{color:var(--ink-3)}
+.kv dd{margin:0;font-weight:700;text-align:right;min-width:0}
+.place{display:flex;gap:12px;align-items:flex-start}
+.place .ic{width:40px;height:40px;border-radius:10px;background:var(--teal-50);color:var(--teal);display:grid;place-items:center;flex:none}
+.place small{display:block;color:var(--ink-3);font-size:13px}
+
+.trust{display:grid;gap:10px}
+.trust div{display:flex;gap:10px;align-items:center;font-size:15px;color:var(--ink-2)}
+.trust svg{color:var(--teal);flex:none}
+.urgent{display:flex;gap:12px;align-items:center;border-radius:var(--r);padding:14px 16px;background:var(--sand-50);border:1px solid #F3DDB5}
+.urgent strong{display:block;font-size:15px}
+.urgent span{font-size:14px;color:var(--ink-2)}
+.tel{font-family:var(--display);font-weight:600;color:var(--teal-700);user-select:all}
+
+/* documents */
+.doc{border:1px solid var(--line);border-radius:var(--r);overflow:hidden}
+.doc>button{width:100%;border:0;background:var(--surface);display:flex;gap:12px;align-items:center;padding:14px;text-align:left}
+.doc .ic{width:42px;height:42px;border-radius:10px;background:var(--teal-50);color:var(--teal);display:grid;place-items:center;flex:none}
+.doc strong{display:block;font-size:15.5px}
+.doc .meta{font-size:13.5px;color:var(--ink-3)}
+.doc .chev{margin-left:auto;color:var(--ink-3);transition:transform .2s}
+.doc[data-open="true"] .chev{transform:rotate(180deg)}
+.paper{background:#EEF2F2;padding:14px}
+.sheet{background:#fff;box-shadow:0 2px 8px rgba(22,49,58,.12);padding:16px 14px;font-size:10.5px;line-height:1.45;color:#333;font-family:Arial,Helvetica,sans-serif;display:flex;flex-direction:column;gap:8px}
+.sheet .sh-head{display:flex;justify-content:space-between;align-items:flex-start;gap:8px;border-bottom:1px solid #ccc;padding-bottom:8px}
+.sheet .sh-title{font-weight:700;font-size:11.5px;text-transform:uppercase;color:#222}
+.sheet .box{border:1px solid #999;padding:6px 8px}
+.sheet .box b{color:#8DB933;font-size:10px;display:block;margin-bottom:2px}
+.sheet .fill{background:#FFF1D3;border-bottom:1.5px solid var(--sand);padding:0 3px;font-weight:700;color:#222}
+.sheet .later{background:var(--teal-50);border-bottom:1.5px dashed var(--teal);padding:0 3px;color:var(--teal-700)}
+.sheet .tline{display:flex;justify-content:space-between;border-top:1px solid #ddd;padding-top:4px}
+.sheet .sign{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+.sheet .sign div{border:1px solid #bbb;height:46px;padding:3px 5px;color:#888;font-size:9px;position:relative}
+.sheet .sign img{position:absolute;inset:10px 6px 2px;height:32px;object-fit:contain}
+.tanlogo{display:flex;align-items:center;gap:5px;font-weight:700;color:#4F5F6F;font-size:11px}
+.tanlogo i{width:18px;height:18px;border-radius:4px;background:#4F5F6F;display:inline-block}
+.legend{display:flex;gap:14px;flex-wrap:wrap;font-size:13px;color:var(--ink-2)}
+.legend span{display:inline-flex;align-items:center;gap:6px}
+.legend i{width:14px;height:10px;border-radius:2px;display:inline-block}
+
+/* signature */
+.signit{display:flex;align-items:center;gap:8px;font-size:13px;color:var(--ink-3)}
+.signit b{font-family:var(--display);color:#3A4A9F;font-weight:600}
+.pad{position:relative;border:1.5px dashed #9FB6B9;border-radius:var(--r);background:#FCFDFD;height:170px;touch-action:none}
+.pad canvas{width:100%;height:100%;display:block;border-radius:var(--r)}
+.pad .ph{position:absolute;inset:auto 16px 16px;border-top:1.5px solid #C9D8DA;padding-top:6px;font-size:13px;color:var(--ink-3);pointer-events:none}
+
+/* upload */
+.up{display:flex;flex-direction:column;gap:12px}
+.up-head{display:flex;gap:12px;align-items:center}
+.up-head .ic{width:46px;height:46px;border-radius:12px;display:grid;place-items:center;flex:none;background:var(--teal-50);color:var(--teal)}
+.up-head strong{display:block;font-size:16px}
+.up .actions{display:flex;gap:8px;flex-wrap:wrap}
+.filebtn{position:relative;overflow:hidden}
+.filebtn input{position:absolute;inset:0;opacity:0;cursor:pointer}
+
+/* status */
+.pill{display:inline-flex;align-items:center;gap:6px;font-size:13px;font-weight:700;padding:4px 10px;border-radius:99px;white-space:nowrap}
+.pill::before{content:"";width:7px;height:7px;border-radius:50%;background:currentColor}
+.pill.ok{background:var(--ok-50);color:var(--ok)}
+.pill.warn{background:var(--warn-50);color:var(--warn)}
+.pill.err{background:var(--err-50);color:var(--err)}
+.pill.info{background:var(--info-50);color:var(--info)}
+.pill.neutral{background:#EEF2F3;color:var(--ink-2)}
+.alert{display:flex;gap:12px;align-items:flex-start;border-radius:var(--r);padding:14px 16px;font-size:15px}
+.alert svg{flex:none;margin-top:2px}
+.alert.warn{background:var(--warn-50);color:#5E3700}
+.alert.err{background:var(--err-50);color:#7A1A14}
+.alert.ok{background:var(--ok-50);color:#174D33}
+.alert.info{background:var(--info-50);color:#1A426E}
+.alert strong{display:block}
+.alert .linkbtn{color:inherit;font-size:14.5px;padding:4px 0 0}
+
+/* dashboard */
+.prog{display:flex;flex-direction:column;gap:10px}
+.bar{height:12px;border-radius:12px;background:var(--teal-100);overflow:hidden}
+.bar i{display:block;height:100%;background:var(--teal);border-radius:12px;transition:width .5s}
+.bar.sm{height:7px}
+.pct{font-family:var(--display);font-weight:700;font-size:34px;color:var(--teal-700);font-variant-numeric:tabular-nums;line-height:1}
+.todo{list-style:none;margin:0;padding:0;display:flex;flex-direction:column}
+.todo li{display:flex;gap:12px;align-items:center;padding:11px 0;border-bottom:1px solid var(--line);font-size:15.5px}
+.todo li:last-child{border-bottom:0}
+.todo .st{width:26px;height:26px;border-radius:50%;display:grid;place-items:center;flex:none;border:2px solid #C9D8DA;color:#fff}
+.todo li.done .st{background:var(--teal);border-color:var(--teal)}
+.todo li.done span:not(.st){color:var(--ink-2)}
+.todo li.bad .st{background:var(--err);border-color:var(--err)}
+.todo li .linkbtn{margin-left:auto;font-size:14px}
+.wa{display:flex;gap:12px;align-items:center}
+.wa .ic{width:46px;height:46px;border-radius:50%;background:#E3F5EA;color:#1E8E4E;display:grid;place-items:center;flex:none}
+.success{width:84px;height:84px;border-radius:50%;background:var(--ok-50);color:var(--ok);display:grid;place-items:center;margin:8px auto 0}
+.steps-v{list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:0}
+.steps-v li{display:grid;grid-template-columns:28px 1fr;gap:12px;padding-bottom:16px;position:relative}
+.steps-v li::after{content:"";position:absolute;left:13px;top:28px;bottom:2px;width:2px;background:var(--teal-100)}
+.steps-v li:last-child::after{display:none}
+.steps-v .n{width:28px;height:28px;border-radius:50%;background:var(--teal-50);color:var(--teal-700);font-family:var(--display);font-weight:600;font-size:13px;display:grid;place-items:center}
+.steps-v li.now .n{background:var(--teal);color:#fff}
+.steps-v strong{display:block;font-size:15.5px}
+.steps-v span{font-size:14px;color:var(--ink-2)}
+
+.toast{position:absolute;left:16px;right:16px;bottom:100px;z-index:20;background:var(--ink);color:#fff;border-radius:12px;padding:12px 16px;font-size:15px;display:flex;gap:10px;align-items:center;box-shadow:0 10px 30px rgba(0,0,0,.25);animation:tin .25s ease-out}
+@keyframes tin{from{transform:translateY(10px);opacity:.4}to{transform:none;opacity:1}}
+.example{font-size:12px;color:var(--sand-700);background:var(--sand-50);border-radius:6px;padding:2px 8px;align-self:flex-start}
+
+/* ---------- Admin ---------- */
+.admin{flex:1;display:grid;grid-template-columns:232px 1fr;min-height:0}
+.side{background:var(--surface);border-right:1px solid var(--line);padding:20px 14px;display:flex;flex-direction:column;gap:4px}
+.side .who{display:flex;gap:10px;align-items:center;padding:6px 8px 18px}
+.avatar{width:36px;height:36px;border-radius:50%;background:var(--sand-50);color:var(--sand-700);font-family:var(--display);font-weight:600;display:grid;place-items:center;flex:none;font-size:14px}
+.side .who small{display:block;color:var(--ink-3);font-size:13px}
+.side nav button{width:100%;display:flex;align-items:center;gap:10px;border:0;background:transparent;border-radius:10px;padding:10px 12px;font-size:15px;color:var(--ink-2);text-align:left;min-height:44px}
+.side nav button[aria-current="true"]{background:var(--teal-50);color:var(--teal-700);font-weight:700}
+.side nav .count{margin-left:auto;font-size:12px;background:var(--teal);color:#fff;border-radius:99px;padding:1px 8px}
+.main{padding:24px 28px 40px;display:flex;flex-direction:column;gap:20px;min-width:0}
+.mainhead{display:flex;align-items:flex-end;gap:16px;flex-wrap:wrap}
+.mainhead .h2{font-size:26px}
+.mainhead p{color:var(--ink-3);font-size:15px}
+.search{margin-left:auto;min-height:44px;border:1.5px solid #C9D8DA;border-radius:11px;padding:0 14px;background:var(--surface);min-width:0;width:260px;max-width:100%}
+.kpis{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:12px}
+.kpi{background:var(--surface);border:1px solid var(--line);border-radius:var(--r);padding:14px 16px;display:flex;flex-direction:column;gap:4px;text-align:left}
+.kpi b{font-family:var(--display);font-size:28px;font-weight:600;font-variant-numeric:tabular-nums;line-height:1.1}
+.kpi span{font-size:14px;color:var(--ink-2)}
+.kpi.warnk b{color:var(--warn)} .kpi.infok b{color:var(--info)} .kpi.okk b{color:var(--ok)}
+.filters{display:flex;gap:8px;flex-wrap:wrap}
+.filters .chip{min-height:38px;font-size:14px;padding:0 13px}
+.split{display:grid;grid-template-columns:minmax(0,1fr) minmax(360px,440px);gap:18px;align-items:start}
+.split.nodetail{grid-template-columns:minmax(0,1fr)}
+.tablewrap{background:var(--surface);border:1px solid var(--line);border-radius:var(--r);overflow-x:auto}
+table{border-collapse:collapse;width:100%;font-size:14.5px}
+th{text-align:left;font-weight:700;font-size:12.5px;text-transform:uppercase;letter-spacing:.06em;color:var(--ink-3);padding:12px 14px;border-bottom:1px solid var(--line);white-space:nowrap}
+td{padding:12px 14px;border-bottom:1px solid var(--line);vertical-align:middle}
+td:first-child{white-space:nowrap}
+.split:not(.nodetail) .hide-d{display:none}
+tr:last-child td{border-bottom:0}
+tbody tr{cursor:pointer}
+tbody tr:hover{background:#F8FBFB}
+tbody tr[aria-selected="true"]{background:var(--teal-50)}
+td .sub{display:block;font-size:13px;color:var(--ink-3)}
+td.num{font-variant-numeric:tabular-nums}
+.mode{font-size:12.5px;font-weight:700;border-radius:6px;padding:2px 7px}
+.mode.inm{background:var(--sand-50);color:var(--sand-700)}
+.mode.prev{background:#EEF2F3;color:var(--ink-2)}
+.livebadge{font-size:11px;font-weight:700;color:#fff;background:var(--teal);border-radius:5px;padding:1px 6px;margin-left:6px;vertical-align:2px}
+.mini{display:flex;align-items:center;gap:8px;min-width:110px}
+.mini .bar{flex:1}
+.mini small{font-variant-numeric:tabular-nums;color:var(--ink-3);font-size:12.5px;width:34px}
+.detail{background:var(--surface);border:1px solid var(--line);border-radius:var(--r);display:flex;flex-direction:column;position:sticky;top:84px;max-height:calc(100vh - 110px);overflow:auto}
+.dhead{padding:18px 18px 14px;border-bottom:1px solid var(--line);display:flex;flex-direction:column;gap:10px}
+.dhead .top{display:flex;gap:8px;align-items:center}
+.dhead .id{font-family:var(--display);font-weight:600;font-size:18px;white-space:nowrap}
+.dactions{display:flex;gap:8px;flex-wrap:wrap}
+.dsec{padding:16px 18px;border-bottom:1px solid var(--line);display:flex;flex-direction:column;gap:10px}
+.dsec:last-child{border-bottom:0}
+.dsec h4{font-size:13px;text-transform:uppercase;letter-spacing:.07em;color:var(--ink-3);font-weight:600}
+.dkv{display:grid;grid-template-columns:130px 1fr;gap:5px 12px;font-size:14.5px}
+.dkv dt{color:var(--ink-3)} .dkv dd{margin:0;min-width:0;overflow-wrap:anywhere}
+.drow{display:flex;gap:10px;align-items:center;font-size:14.5px;flex-wrap:wrap}
+.drow .nm{flex:1;min-width:140px}
+.drow .nm small{display:block;color:var(--ink-3);font-size:12.5px}
+.reasons{display:flex;gap:6px;flex-wrap:wrap;width:100%;padding:8px;background:var(--err-50);border-radius:10px}
+.reasons .chip{min-height:36px;font-size:13.5px;border-color:#E9B8B3}
+.tl{list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:10px;font-size:14px}
+.tl li{display:grid;grid-template-columns:76px 1fr;gap:10px}
+.tl time{color:var(--ink-3);font-variant-numeric:tabular-nums;font-size:13px}
+.sf{display:flex;flex-direction:column;gap:8px;font-size:14px}
+.sf div{display:flex;gap:10px;align-items:center}
+.sf code{font-size:12.5px;background:#EEF2F3;border-radius:5px;padding:1px 6px;color:var(--ink-2)}
+.sf .ok{color:var(--ok)} .sf .pend{color:var(--ink-3)}
+.empty{padding:40px 20px;text-align:center;color:var(--ink-3)}
+.adminbanner{display:flex;gap:10px;align-items:center;font-size:14px;color:var(--ink-2);background:var(--sand-50);border:1px solid #F3DDB5;border-radius:12px;padding:10px 14px}
+
+/* ---------- Responsive ---------- */
+@media (max-width:1180px){ .split{grid-template-columns:minmax(0,1fr)} .detail{position:static;max-height:none} }
+@media (max-width:900px){
+  .stage{grid-template-columns:1fr;padding:0;gap:0}
+  .notes{display:none}
+  .notes-mobile{display:block;padding:10px 16px;background:var(--sand-50);border-bottom:1px solid #F3DDB5}
+  .notes-mobile summary{font-size:14px;font-weight:700;color:var(--sand-700);cursor:pointer;min-height:32px;display:flex;align-items:center}
+  .notes-mobile ul{margin:6px 0 4px;padding-left:18px;font-size:14px;color:var(--ink-2)}
+  .phone{width:100%;border:0;border-radius:0;box-shadow:none;height:auto;min-height:0;flex:1}
+  .shell.u{height:100dvh;min-height:0}
+  .shell.u .stage{flex:1;min-height:0;display:flex;flex-direction:column}
+  .admin{grid-template-columns:1fr}
+  .side{flex-direction:row;align-items:center;padding:8px 12px;overflow-x:auto;border-right:0;border-bottom:1px solid var(--line)}
+  .side .who{display:none}
+  .side nav{display:flex;gap:4px}
+  .side nav button{white-space:nowrap;width:auto}
+  .main{padding:18px 16px 32px}
+  .kpis{grid-template-columns:repeat(2,minmax(0,1fr))}
+  .search{width:100%;margin-left:0}
+  .hide-m{display:none}
+}
+@media (max-width:520px){ .seg{margin-left:0;width:100%} .seg button{flex:1;padding:8px 6px} .topbar .ghost{display:none} .dkv{grid-template-columns:110px 1fr} }
+</style>
+
+</head>
+<body>
+<div class="shell" id="app"></div>
+
+<script>
+/* ======================= Datos ======================= */
+const ZONAS = {
+  "28": {prov:"Madrid", pvp:1745, tan:{n:"Tanatorio Madrid Sur", soc:"Servicios Funerarios Madrid Sur, S.L.", cif:"B-28000000", dir:"Av. de los Pinos 12, 28041 Madrid"}, crem:"Crematorio Madrid Sur"},
+  "08": {prov:"Barcelona", pvp:1890, tan:{n:"Tanatori Litoral", soc:"Serveis Funeraris Litoral, S.L.", cif:"B-08000000", dir:"C/ del Mar 45, 08019 Barcelona"}, crem:"Crematori Litoral"},
+  "46": {prov:"Valencia", pvp:1595, tan:{n:"Tanatorio Valencia Norte", soc:"Funeraria Valencia Norte, S.L.", cif:"B-46000000", dir:"C/ Huerta 8, 46015 Valencia"}, crem:"Crematorio Valencia Norte"},
+  "41": {prov:"Sevilla", pvp:1550, tan:{n:"Tanatorio Sevilla Este", soc:"Servicios Funerarios Sevilla Este, S.L.", cif:"B-41000000", dir:"Av. del Parque 3, 41020 Sevilla"}, crem:"Crematorio Sevilla Este"},
+  "29": {prov:"Málaga", pvp:1590, tan:{n:"Tanatorio Costa Málaga", soc:"Funeraria Costa Málaga, S.L.", cif:"B-29000000", dir:"C/ Alameda 21, 29004 Málaga"}, crem:"Crematorio Costa Málaga"}
+};
+const CONCEPTOS = ["Acondicionamiento","Féretro ecológico","Equipo especializado","Traslados y custodia","Inscripciones y trámites con la administración","Vehículo adaptado","Depósito 24 h","Incineración","Urna"];
+const RELACIONES = ["Cónyuge o pareja","Hijo/a","Padre/Madre","Hermano/a","Nieto/a","Sobrino/a","Otro familiar","Otra relación"];
+const LUGARES = ["Hospital","Residencia","Domicilio","Otro lugar"];
+
+const fmt = (n,d=0)=>{let [i,f]=n.toFixed(d).split(".");i=i.replace(/\B(?=(\d{3})+(?!\d))/g,".");return f?i+","+f:i;};
+const esc = s => String(s??"").replace(/[&<>"]/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]));
+const nowStr = ()=>{const d=new Date();return d.toLocaleTimeString("es-ES",{hour:"2-digit",minute:"2-digit"});};
+const today = ()=>{const d=new Date();return d.toISOString().slice(0,10);};
+const todayEs = ()=>new Date().toLocaleDateString("es-ES");
+
+/* ======================= Iconos ======================= */
+const I = {
+  star:'<svg viewBox="0 0 10 10" aria-hidden="true"><path d="M5 0C5.5 3.4 6.6 4.5 10 5 6.6 5.5 5.5 6.6 5 10 4.5 6.6 3.4 5.5 0 5 3.4 4.5 4.5 3.4 5 0Z" fill="#EDC07C"/></svg>',
+  check:'<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12.5l4.5 4.5L19 7.5"/></svg>',
+  back:'<svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M15 5l-7 7 7 7"/></svg>',
+  phone:'<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 4h3l2 5-2.5 1.5a11 11 0 0 0 6 6L15 14l5 2v3a2 2 0 0 1-2 2A16 16 0 0 1 3 6a2 2 0 0 1 2-2z"/></svg>',
+  chat:'<svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 20l1.3-3.9A8 8 0 1 1 8 19z"/><path d="M9 10h6M9 13.5h4"/></svg>',
+  doc:'<svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M7 3h7l5 5v13H7z"/><path d="M14 3v5h5M10 13h6M10 17h6"/></svg>',
+  cam:'<svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 8h3l2-3h6l2 3h3v11H4z"/><circle cx="12" cy="13" r="3.5"/></svg>',
+  id:'<svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="5" width="18" height="14" rx="2"/><circle cx="9" cy="11" r="2"/><path d="M6 16c.6-1.4 1.7-2 3-2s2.4.6 3 2M14 10h4M14 13h3"/></svg>',
+  pin:'<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 21s7-6.2 7-12a7 7 0 0 0-14 0c0 5.8 7 12 7 12z"/><circle cx="12" cy="9" r="2.5"/></svg>',
+  flame:'<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 21a6 6 0 0 0 6-6c0-4-3-6-4-10-2 2-3 4-3 6-1-1-1.5-2-1.5-3C7 10 6 12.5 6 15a6 6 0 0 0 6 6z"/></svg>',
+  lock:'<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="5" y="11" width="14" height="10" rx="2"/><path d="M8 11V8a4 4 0 0 1 8 0v3"/></svg>',
+  info:'<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M12 11v6M12 7.5v.5"/></svg>',
+  alert:'<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 3l10 18H2z"/><path d="M12 10v4.5M12 17.5v.5"/></svg>',
+  chev:'<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M6 9l6 6 6-6"/></svg>',
+  clock:'<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/></svg>',
+  euro:'<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="M17 6.5A7 7 0 1 0 17 17.5M4 10.5h9M4 13.5h9"/></svg>',
+  folder:'<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round" aria-hidden="true"><path d="M3 6h6l2 2h10v11H3z"/></svg>',
+  map:'<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round" aria-hidden="true"><path d="M3 6l6-2 6 2 6-2v14l-6 2-6-2-6 2z"/><path d="M9 4v14M15 6v14"/></svg>',
+  cloud:'<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round" aria-hidden="true"><path d="M7 18a4.5 4.5 0 0 1-.5-9A6 6 0 0 1 18 9.5a4 4 0 0 1-.5 8.5z"/></svg>'
+};
+const logo = (sz)=>`<span class="logo" ${sz?`style="font-size:${sz}px"`:""}>funely${I.star}</span>`;
+
+/* ======================= Estado ======================= */
+function freshExp(){
+  return {
+    id:"FUN-2026-0148", live:true, mode:null, cp:"28043", zona:null, updated:"ahora",
+    contacto:{email:"lucia.martin@correo-ejemplo.es", tel:"612 345 678", priv:false},
+    c:{nombre:"Lucía", apellidos:"Martín Herrera", dni:"12345678Z", direccion:"Calle de Embajadores 120, 3º B", cp:"28045", municipio:"Madrid", relacion:"Hijo/a"},
+    f:{nombre:"Antonio", apellidos:"Martín Ruiz", dni:"87654321X", lugarTipo:"", lugar:"", fecha:"", hora:""},
+    done:{contacto:false,c:false,f:false},
+    checks:{a:false,b:false,c:false},
+    signed:false, firmaFecha:null, sig:null,
+    dniC:"pendiente", dniF:"pendiente", dniCR:"", dniFR:"",
+    activado:false, pago:"tarjeta", actFecha:null,
+    timeline:[]
+  };
+}
+const SEED = [
+  {id:"FUN-2026-0147", mode:"inmediato", zona:"08", cp:"08019", c:{nombre:"Jordi",apellidos:"Puig Serra",dni:"•••4521K",relacion:"Hijo/a",tel:"6•• ••• 412"}, f:{nombre:"Montserrat",apellidos:"Serra Vidal",dni:"•••1180B",lugarTipo:"Hospital",lugar:"Hospital del Mar"}, done:{contacto:true,c:true,f:true}, signed:true, dniC:"subido", dniF:"subido", activado:false, updated:"hace 12 min", timeline:[["09:41","Presupuesto aceptado · modo inmediato"],["09:52","Documentos firmados con Signaturit"],["09:58","DNI subidos (2)"]]},
+  {id:"FUN-2026-0146", mode:"prevision", zona:"28", cp:"28030", c:{nombre:"Carmen",apellidos:"López Gil",dni:"•••7733M",relacion:"Cónyuge o pareja",tel:"6•• ••• 090"}, f:{nombre:"Julián",apellidos:"Ortega Sanz",dni:"•••0042R"}, done:{contacto:true,c:true,f:true}, signed:true, dniC:"validado", dniF:"pendiente", activado:false, updated:"hace 1 h", timeline:[["ayer","Documentos firmados con Signaturit"],["ayer","DNI contratante validado"],["08:30","Recordatorio enviado por WhatsApp: falta DNI"]]},
+  {id:"FUN-2026-0145", mode:"prevision", zona:"46", cp:"46015", c:{nombre:"Rosa",apellidos:"Navarro Peris",dni:"•••2210T",relacion:"Hermano/a",tel:"6•• ••• 551"}, f:{nombre:"Vicente",apellidos:"Navarro Peris",dni:"•••9081L"}, done:{contacto:true,c:true,f:false}, signed:false, dniC:"pendiente", dniF:"pendiente", activado:false, updated:"hace 3 h", timeline:[["07:12","Área privada creada"],["07:15","Datos del contratante completados"]]},
+  {id:"FUN-2026-0144", mode:"inmediato", zona:"41", cp:"41020", c:{nombre:"Manuel",apellidos:"Ríos Delgado",dni:"•••6634P",relacion:"Hijo/a",tel:"6•• ••• 233"}, f:{nombre:"Dolores",apellidos:"Delgado Mora",dni:"•••3317F",lugarTipo:"Residencia",lugar:"Residencia Los Olivos"}, done:{contacto:true,c:true,f:true}, signed:true, dniC:"validado", dniF:"validado", activado:true, pago:"tarjeta", updated:"ayer", timeline:[["ayer","Servicio activado · pago con tarjeta"],["ayer","Enviado a Salesforce · Caso 500Qy00000Fn8aK"]]},
+  {id:"FUN-2026-0143", mode:"prevision", zona:"29", cp:"29004", c:{nombre:"Isabel",apellidos:"Fuentes Roldán",dni:"•••8812S",relacion:"Sobrino/a",tel:"6•• ••• 778"}, f:{nombre:"Pilar",apellidos:"Roldán Cano",dni:"•••5520D"}, done:{contacto:true,c:true,f:true}, signed:true, dniC:"rechazado", dniCR:"La foto no se lee bien", dniF:"validado", activado:false, updated:"hace 2 días", timeline:[["lun.","DNI contratante rechazado: la foto no se lee bien"],["lun.","Aviso enviado por WhatsApp y email"]]},
+  {id:"FUN-2026-0141", mode:"prevision", zona:"28", cp:"28043", c:{nombre:"Pedro",apellidos:"Alonso Vera",dni:"•••1093C",relacion:"Hijo/a",tel:"6•• ••• 345"}, f:{nombre:"Encarnación",apellidos:"Vera Martín",dni:"•••7781H"}, done:{contacto:true,c:true,f:true}, signed:true, dniC:"validado", dniF:"validado", activado:false, updated:"hace 4 días", timeline:[["jue.","Expediente completo · en previsión"]]}
+];
+
+let S;
+function reset(){
+  S = {view:"user", screen:"inicio", exp:freshExp(), seeds:JSON.parse(JSON.stringify(SEED)), cpErr:"", docOpen:null, otp:"", otpSent:false, toast:null,
+       adminTab:"exp", sel:null, filter:"todos", q:"", reject:null};
+}
+reset();
+const E = ()=>S.exp;
+const Z = (e=E())=>ZONAS[e.zona]||null;
+
+/* ======================= Lógica de expediente ======================= */
+const fname = e => e.f.nombre || (e.mode==="inmediato"?"la persona fallecida":"la persona beneficiaria");
+const dniOk = v => v==="subido"||v==="validado";
+function items(e){
+  return [
+    ["Presupuesto aceptado", !!e.mode, "presupuesto"],
+    ["Área privada creada", e.done.contacto, "contacto"],
+    ["Tus datos", e.done.c, "contratante"],
+    ["Datos de "+fname(e), e.done.f, "fallecido"],
+    ["Documentos firmados", e.signed, "revision"],
+    ["Tu DNI", dniOk(e.dniC), "dni", e.dniC==="rechazado"],
+    ["DNI de "+fname(e), dniOk(e.dniF), "dni", e.dniF==="rechazado"]
+  ];
+}
+const pct = e => Math.round(items(e).filter(i=>i[1]).length/7*100);
+function estado(e){
+  if(e.activado) return ["Activado · en Salesforce","ok"];
+  if(!e.signed) return [e.done.f?"Pendiente de firma":"Completando datos","neutral"];
+  const d=[e.dniC,e.dniF];
+  if(d.includes("rechazado")) return ["DNI rechazado","err"];
+  if(d.includes("pendiente")) return ["Falta documentación","warn"];
+  if(d.includes("subido")) return ["Revisar documentación","info"];
+  return [e.mode==="inmediato"?"Listo para activar":"Listo · en previsión","ok"];
+}
+const ready = e => e.signed && dniOk(e.dniC) && dniOk(e.dniF);
+function log(e,txt){ e.timeline.unshift([nowStr(),txt]); e.updated="ahora"; }
+function allExp(){ return (E().done.contacto?[E()]:[]).concat(S.seeds); }
+
+/* ======================= Notas UX ======================= */
+const FLOW = [
+  ["inicio","Precio por código postal"],["presupuesto","Presupuesto y modo"],["contacto","Área privada"],
+  ["contratante","Datos del contratante"],["fallecido","Datos del fallecido"],["revision","Revisión de documentos"],
+  ["firma","Firma con Signaturit"],["dni","Subida de DNI"],["area","Área privada"],["activar","Activación y pago"],["activado","Servicio activado"]
+];
+const NOTES = {
+  inicio:["Un solo dato para empezar: el código postal. El precio aparece sin registro.","El teléfono 24 h está siempre visible para quien necesita ayuda inmediata.","Prueba otros CP: 08019, 46015, 41020, 29004 o uno sin cobertura (p. ej. 50001)."],
+  presupuesto:["Precio cerrado con IVA y desglose de lo que incluye, con los mismos conceptos del contrato.","El CP determina tanatorio y crematorio, que se muestran para generar confianza.","La pregunta clave bifurca el flujo: servicio inmediato o previsión."],
+  contacto:["Solo email y móvil. Sin contraseñas: acceso con enlace mágico o SMS.","A partir de aquí el expediente aparece en el panel del gestor (cámbiate a la vista Gestor)."],
+  contratante:["“Escanear DNI” rellena nombre, apellidos y DNI, y además cuenta como DNI subido.","Los campos rellenados automáticamente se marcan en arena para revisarlos.","Email y teléfono vienen del paso anterior: nunca pedimos un dato dos veces."],
+  fallecido:["El lenguaje cambia según el modo: “persona fallecida” o “persona beneficiaria”.","En previsión, fecha y lugar se piden al activar; aquí solo se piden si ya ha ocurrido."],
+  revision:["Los 3 documentos se rellenan solos: contrato (PVP de la zona), autorización general (logo y datos fiscales del tanatorio) y solicitud de incineración.","En arena: datos del usuario. En verde agua: datos que se añaden al activar.","Los checks legales se aceptan aquí una vez y se trasladan a los documentos."],
+  firma:["Una sola firma para los 3 documentos (sobre de Signaturit con firma avanzada: OTP por SMS + firma manuscrita).","La firma se coloca automáticamente en cada documento."],
+  dni:["Foto con la cámara del móvil; se aceptan una o dos caras.","Si el DNI ya se escaneó en los datos, aparece como hecho."],
+  area:["Barra de progreso y lista de pendientes con enlace directo a cada tarea.","Avisos claros cuando el gestor rechaza un documento.","WhatsApp y teléfono 24 h siempre a mano."],
+  activar:["Al activar: se piden fecha, hora y lugar, se elige el método de pago y se fecha la autorización y la solicitud.","Después se envían las cuentas de difunto y declarante y el caso a Salesforce."],
+  activado:["Confirmación con lo que pasa a continuación y quién va a llamar.","En la vista Gestor el expediente pasa a “Activado · en Salesforce”."]
+};
+const STEP_OF = {presupuesto:0,contacto:1,contratante:1,fallecido:1,revision:2,firma:2,dni:3};
+const BACK = {presupuesto:"inicio",contacto:"presupuesto",contratante:"contacto",fallecido:"contratante",revision:"fallecido",firma:"revision",dni:"area",activar:"area"};
+
+/* ======================= Pantallas: familia ======================= */
+function field(id,label,path,val,{opt=false,type="text",mode="",auto=false,hint="",ac=""}={}){
+  return `<div class="field"><label for="${id}">${label}${opt?' <span class="opt">(opcional)</span>':""}</label>
+  <input class="input${auto?" auto":""}" id="${id}" type="${type}" ${mode?`inputmode="${mode}"`:""} ${ac?`autocomplete="${ac}"`:""} data-bind="${path}" value="${esc(val)}">
+  ${hint?`<span class="hint">${hint}</span>`:""}</div>`;
+}
+function chips(path,opts,cur){ return `<div class="chips" role="group">${opts.map(o=>`<button type="button" class="chip" data-act="set" data-path="${path}" data-val="${esc(o)}" aria-pressed="${cur===o}">${esc(o)}</button>`).join("")}</div>`; }
+
+const SCREENS = {
+inicio(){
+  const e=E();
+  return {body:`
+    <div class="stack"><span class="eyebrow">Incineración directa</span>
+    <h1 class="h1">Un servicio funerario sencillo, con precio cerrado.</h1>
+    <p class="lead">Consulta el precio en tu zona y contrátalo desde el móvil. Te acompañamos en cada paso.</p></div>
+    <div class="card tint stack-l">
+      ${field("cp","¿Dónde se realizará el servicio?","cp",e.cp,{mode:"numeric",hint:"Código postal del lugar de fallecimiento o del domicilio.",ac:"postal-code"})}
+      ${S.cpErr?`<div class="alert warn" role="alert">${I.info}<div><strong>Aún no damos servicio en ese código postal.</strong>Llámanos y te ayudamos a encontrar una opción: <span class="tel">900 000 000</span></div></div>`:""}
+    </div>
+    <div class="trust">
+      <div>${I.check} Precio cerrado, IVA incluido</div>
+      <div>${I.check} Todo online, sin desplazamientos</div>
+      <div>${I.check} Atención 24 h por teléfono y WhatsApp</div>
+    </div>
+    <div class="urgent">${I.phone}<div><strong>¿Necesitas ayuda ahora?</strong><span>Llámanos 24 h: <span class="tel">900 000 000</span></span></div></div>`,
+   cta:{label:"Ver el precio",act:"verPrecio",ok:()=>/^\d{5}$/.test(E().cp)}};
+},
+presupuesto(){
+  const e=E(), z=Z(); const base=z.pvp/1.21;
+  return {body:`
+    <div class="stack"><span class="eyebrow">Tu presupuesto · ${esc(z.prov)} ${esc(e.cp)}</span>
+    <div class="price">${fmt(z.pvp)} <small>€</small></div>
+    <p class="hint">IVA incluido (${fmt(base,2)} € + ${fmt(z.pvp-base,2)} € de IVA). Precio cerrado.</p></div>
+    <div class="card stack-l"><h2 class="h2" style="font-size:18px">Qué incluye</h2>
+      <ul class="incl">${CONCEPTOS.map(c=>`<li>${I.check}${c}</li>`).join("")}</ul></div>
+    <div class="card stack-l">
+      <div class="place"><span class="ic">${I.pin}</span><div><small>Tanatorio</small><strong>${esc(z.tan.n)}</strong></div></div>
+      <div class="place"><span class="ic">${I.flame}</span><div><small>Crematorio</small><strong>${esc(z.crem)}</strong></div></div>
+    </div>
+    <fieldset class="stack-l" style="border:0;padding:0;margin:0">
+      <legend class="h2" style="font-size:19px;margin-bottom:12px">¿Se ha producido ya el fallecimiento?</legend>
+      <button type="button" class="choice" data-act="mode" data-val="inmediato" aria-pressed="${e.mode==="inmediato"}"><span class="dot"></span><span><strong>Sí, necesito el servicio ahora</strong><span>Firmas desde el móvil, lo activamos hoy y un asesor te llama en minutos.</span></span></button>
+      <button type="button" class="choice" data-act="mode" data-val="prevision" aria-pressed="${e.mode==="prevision"}"><span class="dot"></span><span><strong>No, quiero dejarlo previsto</strong><span>Lo dejas firmado hoy y lo activas cuando llegue el momento. Pagas al activarlo.</span></span></button>
+    </fieldset>`,
+   cta:{label:"Continuar",act:"go",to:"contacto",ok:()=>!!E().mode,hint:"Sin compromiso hasta que firmes."}};
+},
+contacto(){
+  const e=E();
+  return {body:`
+    <div class="stack"><h1 class="h1" style="font-size:25px">Guarda tu presupuesto</h1>
+    <p class="lead">Crearemos tu área privada para que puedas seguir el proceso y retomarlo cuando quieras.</p></div>
+    <span class="example">Datos de ejemplo</span>
+    ${field("em","Email","contacto.email",e.contacto.email,{type:"email",ac:"email",mode:"email"})}
+    ${field("tl","Teléfono móvil","contacto.tel",e.contacto.tel,{type:"tel",ac:"tel",mode:"tel",hint:"Te enviaremos aquí el código para firmar."})}
+    <label class="check"><input type="checkbox" data-bind="contacto.priv" ${e.contacto.priv?"checked":""}><span>He leído la <u>política de privacidad</u> y acepto que Funely trate mis datos para gestionar el servicio.</span></label>
+    <div class="alert info">${I.lock}<div>Sin contraseñas. Entrarás con un enlace que te enviamos por email o SMS.</div></div>`,
+   cta:{label:"Crear mi área privada",act:"crearCuenta",ok:()=>E().contacto.email.includes("@")&&E().contacto.tel.replace(/\D/g,"").length>=9&&E().contacto.priv}};
+},
+contratante(){
+  const e=E(), a=e.scanC;
+  return {body:`
+    <div class="stack"><h1 class="h1" style="font-size:25px">Tus datos</h1>
+    <p class="lead">Los usaremos para rellenar el contrato por ti. Solo tendrás que revisarlo y firmar.</p></div>
+    ${a?`<div class="alert ok">${I.check}<div><strong>DNI leído correctamente.</strong>Revisa los campos marcados. Tu DNI ya queda subido.</div></div>`:
+    `<div class="card sand scan"><span class="ic">${I.id}</span><div style="flex:1"><strong>Ahorra tiempo</strong><p>Haz una foto de tu DNI y rellenamos los datos por ti.</p></div><button class="btn sm secondary" data-act="scan" data-who="C">Escanear</button></div>`}
+    ${field("cn","Nombre","c.nombre",e.c.nombre,{auto:a,ac:"given-name"})}
+    ${field("ca","Apellidos","c.apellidos",e.c.apellidos,{auto:a,ac:"family-name"})}
+    ${field("cd","DNI o NIE","c.dni",e.c.dni,{auto:a})}
+    ${field("cdir","Dirección","c.direccion",e.c.direccion,{ac:"street-address"})}
+    <div class="row2">${field("ccp","Código postal","c.cp",e.c.cp,{mode:"numeric",ac:"postal-code"})}${field("cm","Municipio","c.municipio",e.c.municipio,{ac:"address-level2"})}</div>
+    <div class="field"><span class="flabel">Tu relación con ${e.mode==="inmediato"?"la persona fallecida":"la persona beneficiaria"}</span>${chips("c.relacion",RELACIONES,e.c.relacion)}</div>
+    <div class="card stack"><span class="hint">Contacto (del paso anterior)</span><strong style="overflow-wrap:anywhere">${esc(e.contacto.email)} · ${esc(e.contacto.tel)}</strong></div>`,
+   cta:{label:"Continuar",act:"saveC",ok:()=>{const c=E().c;return c.nombre&&c.apellidos&&c.dni.length>=8&&c.direccion&&c.relacion;}}};
+},
+fallecido(){
+  const e=E(), a=e.scanF, inm=e.mode==="inmediato";
+  return {body:`
+    <div class="stack"><h1 class="h1" style="font-size:25px">${inm?"Datos de la persona fallecida":"Datos de la persona beneficiaria"}</h1>
+    <p class="lead">${inm?"Sentimos mucho tu pérdida. Con estos datos preparamos la documentación.":"Es la persona para la que dejas previsto el servicio."}</p></div>
+    ${a?`<div class="alert ok">${I.check}<div><strong>DNI leído correctamente.</strong>Revisa los campos marcados. Este DNI ya queda subido.</div></div>`:
+    `<div class="card sand scan"><span class="ic">${I.id}</span><div style="flex:1"><strong>¿Tienes su DNI a mano?</strong><p>Hazle una foto y rellenamos sus datos.</p></div><button class="btn sm secondary" data-act="scan" data-who="F">Escanear</button></div>`}
+    ${field("fn","Nombre","f.nombre",e.f.nombre,{auto:a})}
+    ${field("fa","Apellidos","f.apellidos",e.f.apellidos,{auto:a})}
+    ${field("fd","DNI o NIE","f.dni",e.f.dni,{auto:a})}
+    ${inm?`<div class="stack-l card"><h2 class="h2" style="font-size:17px">Sobre el fallecimiento <span class="opt hint">(si lo sabes)</span></h2>
+      <div class="field"><span class="flabel">¿Dónde ha ocurrido?</span>${chips("f.lugarTipo",LUGARES,e.f.lugarTipo)}</div>
+      ${field("fl",e.f.lugarTipo==="Domicilio"||e.f.lugarTipo==="Otro lugar"?"Dirección":"Nombre del centro","f.lugar",e.f.lugar,{opt:true})}
+      <div class="row2">${field("ff","Fecha","f.fecha",e.f.fecha,{type:"date",opt:true})}${field("fh","Hora","f.hora",e.f.hora,{type:"time",opt:true})}</div></div>`
+    :`<div class="alert info">${I.info}<div>La fecha y el lugar del fallecimiento te los pediremos solo cuando actives el servicio.</div></div>`}`,
+   cta:{label:"Preparar mis documentos",act:"saveF",ok:()=>{const f=E().f;return f.nombre&&f.apellidos&&f.dni.length>=8;}}};
+},
+revision(){
+  const e=E(); const docs=[["contrato","Contrato de servicios","Funely · Portal Funerario SLU"],["autorizacion","Autorización general",Z().tan.n],["solicitud","Solicitud de incineración",Z().crem]];
+  return {body:`
+    <div class="stack"><h1 class="h1" style="font-size:25px">Revisa tus documentos</h1>
+    <p class="lead">Los hemos rellenado con tus datos. Toca cada uno para verlo.</p></div>
+    <div class="legend"><span><i style="background:#FFF1D3;border-bottom:2px solid var(--sand)"></i>Tus datos</span><span><i style="background:var(--teal-50);border-bottom:2px dashed var(--teal)"></i>Se completa al activar</span></div>
+    <div class="stack">${docs.map(([k,t,m])=>`<div class="doc" data-open="${S.docOpen===k}">
+      <button type="button" data-act="doc" data-val="${k}" aria-expanded="${S.docOpen===k}"><span class="ic">${I.doc}</span><span><strong>${t}</strong><span class="meta">${esc(m)} · Rellenado automáticamente</span></span><span class="chev">${I.chev}</span></button>
+      ${S.docOpen===k?`<div class="paper">${docPreview(k,e)}</div>`:""}</div>`).join("")}</div>
+    <div class="stack" style="gap:0">
+      <h2 class="h2" style="font-size:17px;margin-bottom:4px">Antes de firmar</h2>
+      <label class="check"><input type="checkbox" data-bind="checks.a" ${e.checks.a?"checked":""}><span>He leído y acepto las condiciones generales de contratación.</span></label>
+      <label class="check"><input type="checkbox" data-bind="checks.b" ${e.checks.b?"checked":""}><span>Autorizo a Funely y a ${esc(Z().tan.n)} a realizar los trámites necesarios en mi nombre.</span></label>
+      <label class="check"><input type="checkbox" data-bind="checks.c" ${e.checks.c?"checked":""}><span>Declaro que no me consta oposición a la incineración por parte de ${esc(fname(e))} ni de sus familiares.</span></label>
+    </div>
+    <button class="linkbtn" data-act="go" data-to="contratante" style="align-self:flex-start">¿Algún dato está mal? Editar mis datos</button>`,
+   cta:{label:"Firmar los 3 documentos",act:"go",to:"firma",ok:()=>{const c=E().checks;return c.a&&c.b&&c.c;}}};
+},
+firma(){
+  const e=E();
+  return {body:`
+    <div class="signit">${I.lock} Firma electrónica avanzada con <b>signaturit</b></div>
+    <div class="stack"><h1 class="h1" style="font-size:25px">Firma tus documentos</h1>
+    <p class="lead">Una sola firma vale para los 3 documentos.</p></div>
+    <div class="stack-l card">
+      <div class="field"><label for="otp">1. Código que te hemos enviado por SMS al ${esc(e.contacto.tel.replace(/(\d{3}).*(\d{3})$/,"$1 ••• $2"))}</label>
+      <input class="input big" id="otp" inputmode="numeric" autocomplete="one-time-code" maxlength="6" data-bind="$otp" value="${esc(S.otp)}">
+      <span class="hint">Código de ejemplo: 482913 · <button class="linkbtn" data-act="toast" data-val="Te hemos enviado un nuevo código." style="font-size:14px;padding:0">Reenviar código</button></span></div>
+    </div>
+    <div class="stack">
+      <span class="flabel">2. Dibuja tu firma con el dedo</span>
+      <div class="pad"><canvas id="pad" aria-label="Zona para dibujar tu firma"></canvas><span class="ph">Firma de ${esc(e.c.nombre)} ${esc(e.c.apellidos)}</span></div>
+      <button class="linkbtn" data-act="clearSig" style="align-self:flex-end">Borrar firma</button>
+    </div>`,
+   cta:{label:"Firmar",act:"firmar",ok:()=>S.otp.length===6&&!!S.hasSig,hint:"Recibirás una copia firmada por email."}};
+},
+dni(){
+  const e=E();
+  const box=(who,name,st,reason)=>{
+    const done=dniOk(st);
+    return `<div class="card up">
+      <div class="up-head"><span class="ic">${I.id}</span><div style="flex:1;min-width:0"><strong>${name}</strong>
+      ${done?`<span class="pill ${st==="validado"?"ok":"info"}">${st==="validado"?"Validado":"Subido"}</span>`:st==="rechazado"?`<span class="pill err">Hay que repetirlo</span>`:`<span class="pill warn">Pendiente</span>`}</div></div>
+      ${st==="rechazado"?`<div class="alert err">${I.alert}<div><strong>${esc(reason||"No se ha podido validar")}</strong>Haz una foto nueva con buena luz y sin reflejos.</div></div>`:""}
+      ${done?"":`<div class="actions"><span class="btn sm primary filebtn">${I.cam} Hacer foto<input type="file" accept="image/*" capture="environment" data-file="${who}" aria-label="Hacer foto del DNI de ${esc(name)}"></span><button class="btn sm outline" data-act="sample" data-who="${who}">Usar foto de ejemplo</button></div>`}
+    </div>`;};
+  return {body:`
+    <div class="stack"><h1 class="h1" style="font-size:25px">Último paso: los DNI</h1>
+    <p class="lead">Basta con una foto de cada uno. Comprobamos que se lea bien.</p></div>
+    ${box("C","Tu DNI",e.dniC,e.dniCR)}
+    ${box("F","DNI de "+fname(e),e.dniF,e.dniFR)}
+    <p class="hint">Si ahora no lo tienes, puedes subirlo más tarde desde tu área privada.</p>`,
+   cta:{label:ready(e)?"Ir a mi área privada":"Continuar más tarde",act:"go",to:"area",ok:()=>true}};
+},
+area(){
+  const e=E(), p=pct(e), its=items(e), pend=its.filter(i=>!i[1]);
+  const bad=[["C",e.dniC,e.dniCR,"Tu DNI"],["F",e.dniF,e.dniFR,"El DNI de "+fname(e)]].filter(x=>x[1]==="rechazado");
+  return {body:`
+    <div class="stack"><span class="eyebrow">Expediente ${e.id}</span><h1 class="h1" style="font-size:26px">Hola, ${esc(e.c.nombre)}</h1></div>
+    ${e.activado?`<div class="alert ok">${I.check}<div><strong>Servicio activado</strong>Tu asesor te acompaña en todo el proceso. Te escribiremos por WhatsApp con cada novedad.</div></div>`:""}
+    ${bad.map(b=>`<div class="alert err" role="alert">${I.alert}<div><strong>${b[3]} no se ha podido validar</strong>${esc(b[2])}. Sube una foto nueva.<br><button class="linkbtn" data-act="go" data-to="dni">Subir de nuevo</button></div></div>`).join("")}
+    <div class="card prog">
+      <div style="display:flex;align-items:flex-end;gap:12px"><span class="pct">${p}%</span><span class="hint" style="padding-bottom:3px">${p===100?"Todo listo":"completado · te falta"+(pend.length===1?" 1 paso":" "+pend.length+" pasos")}</span></div>
+      <div class="bar" role="progressbar" aria-valuenow="${p}" aria-valuemin="0" aria-valuemax="100" aria-label="Progreso del expediente"><i style="width:${p}%"></i></div>
+      <ul class="todo">${its.map(([t,ok,to,bad])=>`<li class="${ok?"done":bad?"bad":""}"><span class="st">${ok?I.check:bad?"!":""}</span><span>${esc(t)}</span>${ok?"":`<button class="linkbtn" data-act="go" data-to="${to}">${bad?"Repetir":"Hacer ahora"}</button>`}</li>`).join("")}</ul>
+    </div>
+    ${!e.activado&&ready(e)?`<div class="card tint stack-l"><h2 class="h2" style="font-size:19px">${e.mode==="inmediato"?"Ya puedes activar el servicio":"Todo listo para cuando lo necesites"}</h2>
+      <p style="color:var(--ink-2)">${e.mode==="inmediato"?"Actívalo ahora y nos ponemos en marcha. Un asesor te llamará en minutos.":"Cuando se produzca el fallecimiento, entra aquí y pulsa “Activar el servicio”, o llámanos al 900 000 000 a cualquier hora."}</p>
+      <button class="btn primary" data-act="go" data-to="activar">Activar el servicio</button></div>`:""}
+    <div class="card stack-l"><h2 class="h2" style="font-size:18px">Tus documentos</h2>
+      ${[["Contrato de servicios",e.signed],["Autorización general",e.signed],["Solicitud de incineración",e.signed]].map(([t,s])=>`<div class="drow"><span class="ic" style="color:var(--teal)">${I.doc}</span><span class="nm">${t}<small>${s?"Firmado el "+(e.firmaFecha||todayEs()):"Pendiente de firma"}</small></span><span class="pill ${s?"ok":"neutral"}">${s?"Firmado":"Pendiente"}</span></div>`).join("")}
+    </div>
+    <div class="card stack"><div class="kv"><dt>Servicio</dt><dd>Incineración directa</dd><dt>Tanatorio</dt><dd>${esc(Z().tan.n)}</dd><dt>Precio cerrado</dt><dd>${fmt(Z().pvp)} €</dd><dt>Modalidad</dt><dd>${e.mode==="inmediato"?"Inmediato":"Previsión"}</dd></div></div>
+    <div class="card wa"><span class="ic">${I.chat}</span><div style="flex:1"><strong>Te acompañamos por WhatsApp</strong><p class="hint">Escríbenos cuando quieras: <span class="tel">600 000 000</span></p></div></div>`,
+   cta: !e.activado&&ready(e)?null:{label:pend.length?"Continuar donde lo dejé":"Hablar con un asesor",act:"go",to:pend.length?pend[0][2]:"area",ok:()=>true}};
+},
+activar(){
+  const e=E(); const z=Z();
+  if(!e.f.fecha) e.f.fecha=today(); if(!e.f.hora) e.f.hora=nowStr();
+  const pagos=[["tarjeta","Tarjeta","Pago seguro ahora mismo"],["bizum","Bizum","Al número que nos indiques"],["transferencia","Transferencia","Te enviamos los datos por email"]];
+  return {body:`
+    <div class="stack"><h1 class="h1" style="font-size:25px">Activar el servicio</h1>
+    <p class="lead">${e.mode==="prevision"?"Sentimos mucho tu pérdida. ":""}Con estos datos lo ponemos en marcha y un asesor te llamará enseguida.</p></div>
+    <div class="card stack-l"><h2 class="h2" style="font-size:17px">Sobre el fallecimiento</h2>
+      <div class="row2">${field("af","Fecha","f.fecha",e.f.fecha,{type:"date"})}${field("ah","Hora aproximada","f.hora",e.f.hora,{type:"time"})}</div>
+      <div class="field"><span class="flabel">¿Dónde ha ocurrido?</span>${chips("f.lugarTipo",LUGARES,e.f.lugarTipo)}</div>
+      ${field("al",e.f.lugarTipo==="Domicilio"||e.f.lugarTipo==="Otro lugar"?"Dirección":"Nombre del centro","f.lugar",e.f.lugar,{opt:true})}
+    </div>
+    <fieldset class="stack" style="border:0;padding:0;margin:0"><legend class="h2" style="font-size:17px;margin-bottom:10px">¿Cómo quieres pagar ${fmt(z.pvp)} €?</legend>
+      ${pagos.map(([k,t,d])=>`<button type="button" class="choice" data-act="set" data-path="pago" data-val="${k}" aria-pressed="${e.pago===k}"><span class="dot"></span><span><strong>${t}</strong><span>${d}</span></span></button>`).join("")}
+    </fieldset>
+    <div class="alert info">${I.info}<div>Al activar, añadimos la fecha a la autorización general y a la solicitud de incineración, y tu asesor recibe el expediente completo.</div></div>`,
+   cta:{label:`Activar y pagar ${fmt(z.pvp)} €`,act:"activar",ok:()=>!!E().f.fecha&&!!E().f.lugarTipo}};
+},
+activado(){
+  const e=E();
+  return {body:`
+    <div class="success">${I.check.replace('width="18" height="18"','width="40" height="40"')}</div>
+    <div class="stack" style="text-align:center"><h1 class="h1" style="font-size:26px">Servicio activado</h1>
+    <p class="lead">Un asesor de Funely te llamará en los próximos 10 minutos al <span class="tel">${esc(e.contacto.tel)}</span>.</p></div>
+    <div class="card"><h2 class="h2" style="font-size:17px;margin-bottom:14px">Qué pasa ahora</h2>
+    <ol class="steps-v">
+      <li class="now"><span class="n">1</span><div><strong>Te llamamos</strong><span>Confirmamos contigo la recogida y resolvemos dudas.</span></div></li>
+      <li><span class="n">2</span><div><strong>Recogida y traslado</strong><span>Trasladamos a ${esc(fname(e))} a ${esc(Z().tan.n)}.</span></div></li>
+      <li><span class="n">3</span><div><strong>Trámites</strong><span>Nos ocupamos de la inscripción y los permisos.</span></div></li>
+      <li><span class="n">4</span><div><strong>Incineración y entrega de la urna</strong><span>Te avisamos para acordar la entrega.</span></div></li>
+    </ol></div>
+    <div class="card wa"><span class="ic">${I.chat}</span><div style="flex:1"><strong>Seguimos por WhatsApp</strong><p class="hint">Te escribiremos con cada novedad.</p></div></div>`,
+   cta:{label:"Ir a mi área privada",act:"go",to:"area",ok:()=>true}};
+}
+};
+
+/* ======================= Documento rellenado ======================= */
+function docPreview(k,e){
+  const z=Z(e), F=v=>`<span class="fill">${esc(v||"—")}</span>`, L=t=>`<span class="later">${t}</span>`;
+  const sig = e.sig?`<img src="${e.sig}" alt="Firma">`:"";
+  const fecha = e.activado? F(new Date(e.f.fecha).toLocaleDateString("es-ES")) : L("al activar");
+  if(k==="contrato"){ const base=z.pvp/1.21; return `<div class="sheet">
+    <div class="sh-head">${logo(18)}<span>Fecha de creación: ${todayEs()}</span></div>
+    <div style="font-size:9.5px">PORTAL FUNERARIO SLU</div>
+    <div class="box"><b>DATOS DEL CLIENTE</b>Nombre y apellidos: ${F(e.c.nombre+" "+e.c.apellidos)}<br>DNI: ${F(e.c.dni)}</div>
+    <div class="box"><b>DATOS DEL BENEFICIARIO</b>Nombre y apellidos: ${F(e.f.nombre+" "+e.f.apellidos)}<br>DNI: ${F(e.f.dni)}<br>Lugar de defunción: ${e.f.lugar?F(e.f.lugar):L("si lo hubiera")}</div>
+    <div><b>RESUMEN DEL SERVICIO</b> · Prestación funeraria básica Funely + Destino final incineración</div>
+    <div class="tline"><span>Precio ${fmt(base,2)} € · IVA 21% ${fmt(z.pvp-base,2)} €</span><b>PVP ${F(fmt(z.pvp,2)+" €")}</b></div>
+    <div class="sign"><div>Firma empresa</div><div>Firma cliente${sig}</div></div></div>`;}
+  if(k==="autorizacion") return `<div class="sheet">
+    <div class="sh-head"><span class="tanlogo"><i></i>${esc(z.tan.n)}</span><span class="sh-title">Autorización general</span></div>
+    <div class="box"><b>DATOS DEL CLIENTE</b>${F(e.c.nombre+" "+e.c.apellidos)} · DNI ${F(e.c.dni)}<br>Relación con el difunto: ${F(e.c.relacion)}</div>
+    <div class="box"><b>DATOS DEL DIFUNTO</b>${F(e.f.nombre+" "+e.f.apellidos)} · DNI ${F(e.f.dni)}<br>Fecha de defunción: ${fecha} · Lugar: ${e.f.lugar?F(e.f.lugar):L("al activar")}</div>
+    <div>Lugar de incineración: ${F(z.crem)}</div>
+    <div>☑ Autorizo la organización del servicio funerario &nbsp;☑ Acepto las condiciones</div>
+    <div class="sign"><div>Fecha: ${fecha}</div><div>Firma del cliente${sig}</div></div>
+    <div style="font-size:8.5px;color:#777;border-top:1px solid #ddd;padding-top:4px">${F(z.tan.soc)} · CIF ${F(z.tan.cif)} · ${esc(z.tan.dir)}</div></div>`;
+  return `<div class="sheet">
+    <div class="sh-head"><span class="tanlogo"><i></i>${esc(z.tan.n)}</span><span class="sh-title">Solicitud de incineración</span></div>
+    <div class="box"><b>DATOS DEL SOLICITANTE</b>${F(e.c.nombre+" "+e.c.apellidos)} · DNI ${F(e.c.dni)}<br>Relación: ${F(e.c.relacion)} · Tel. ${F(e.contacto.tel)}</div>
+    <div class="box"><b>DATOS DEL DIFUNTO</b>${F(e.f.nombre+" "+e.f.apellidos)} · DNI ${F(e.f.dni)}<br>Fecha de defunción: ${fecha} · Lugar: ${e.f.lugar?F(e.f.lugar):L("al activar")}</div>
+    <div>Funeraria que realiza el servicio: ${F(z.tan.soc)}</div>
+    <div>☑ Declaro que no consta oposición a la incineración &nbsp;☑ Autorizo la entrega de las cenizas</div>
+    <div class="sign"><div>Fecha: ${fecha}</div><div>Firma del solicitante${sig}</div></div>
+    <div style="font-size:8.5px;color:#777;border-top:1px solid #ddd;padding-top:4px">${F(z.tan.soc)} · CIF ${F(z.tan.cif)}</div></div>`;
+}
+
+/* ======================= Render ======================= */
+function renderUser(){
+  const sc=S.screen, s=SCREENS[sc](), stepIdx=STEP_OF[sc];
+  const steps=["Presupuesto","Tus datos","Firma","Documentos"];
+  const back=BACK[sc];
+  const fidx=FLOW.findIndex(f=>f[0]===sc);
+  return `
+  <details class="notes-mobile"><summary>Notas de diseño · ${FLOW[fidx][1]}</summary><ul>${NOTES[sc].map(n=>`<li>${n}</li>`).join("")}</ul></details>
+  <div class="stage">
+    <aside class="notes" aria-label="Notas del prototipo">
+      <div class="notecard"><h3>${FLOW[fidx][1]}</h3><ul>${NOTES[sc].map(n=>`<li>${n}</li>`).join("")}</ul></div>
+      <div><h2 style="margin-bottom:8px">Flujo de la familia</h2>
+      <ol class="flowlist">${FLOW.map(([k,t],i)=>`<li><button data-act="jump" data-to="${k}" aria-current="${k===sc}"><span class="n">${i+1}</span>${t}</button></li>`).join("")}</ol></div>
+    </aside>
+    <div class="phone"><section class="screen" aria-live="polite">
+      <header class="apphead">${back?`<button class="iconbtn" data-act="go" data-to="${back}" aria-label="Volver">${I.back}</button>`:""}${logo()}
+        <button class="help" data-act="toast" data-val="Llámanos 24 h al 900 000 000 o escríbenos por WhatsApp.">${I.phone} Ayuda 24 h</button></header>
+      ${stepIdx!==undefined?`<nav class="stepper" aria-label="Progreso"><ol>${steps.map((t,i)=>`<li class="${i<stepIdx?"done":i===stepIdx?"cur":""}" ${i===stepIdx?'aria-current="step"':""}>${t}</li>`).join("")}</ol></nav>`:""}
+      <div class="scroll" id="scroll">${s.body}</div>
+      ${s.cta?`<div class="cta"><button class="btn primary" data-cta data-act="${s.cta.act}" ${s.cta.to?`data-to="${s.cta.to}"`:""} ${s.cta.ok()?"":"disabled"}>${s.cta.label}</button>${s.cta.hint?`<span class="hint">${s.cta.hint}</span>`:""}</div>`:""}
+      ${S.toast?`<div class="toast" role="status">${I.check}${esc(S.toast)}</div>`:""}
+    </section></div>
+  </div>`;
+}
+let currentCta=null;
+
+function renderAdmin(){
+  const list=allExp();
+  const cnt = f=>list.filter(f).length;
+  const filters=[["todos","Todos",()=>true],["revisar","Revisar documentación",e=>estado(e)[0]==="Revisar documentación"],["falta","Falta documentación",e=>["Falta documentación","DNI rechazado"].includes(estado(e)[0])],["firma","Sin firmar",e=>!e.signed],["listos","Listos",e=>ready(e)&&!e.activado],["activados","Activados",e=>e.activado]];
+  const fdef=filters.find(f=>f[0]===S.filter);
+  const q=S.q.toLowerCase();
+  const rows=list.filter(fdef[2]).filter(e=>!q||(e.id+e.c.nombre+e.c.apellidos+e.f.nombre+e.f.apellidos).toLowerCase().includes(q));
+  const sel=list.find(e=>e.id===S.sel);
+  const main = S.adminTab==="tarifas"? tarifas() : `
+    <div class="mainhead"><div><h1 class="h2">Expedientes</h1><p>${list.length} expedientes · ${cnt(e=>!e.activado)} abiertos</p></div>
+      <label class="sr" for="q">Buscar expediente</label><input class="search" id="q" placeholder="Buscar por nombre o expediente" data-bind="$q" value="${esc(S.q)}"></div>
+    ${!E().done.contacto?`<div class="adminbanner">${I.info}<span>Completa el flujo de la familia hasta “Área privada” y su expediente aparecerá aquí en directo, marcado como <b>En curso</b>.</span></div>`:""}
+    <div class="kpis">
+      <button class="kpi infok" data-act="filter" data-val="revisar"><b>${cnt(filters[1][2])}</b><span>Documentación por revisar</span></button>
+      <button class="kpi warnk" data-act="filter" data-val="falta"><b>${cnt(filters[2][2])}</b><span>Con documentación pendiente</span></button>
+      <button class="kpi" data-act="filter" data-val="firma"><b>${cnt(filters[3][2])}</b><span>Sin firmar</span></button>
+      <button class="kpi okk" data-act="filter" data-val="activados"><b>${cnt(filters[5][2])}</b><span>Activados</span></button>
+    </div>
+    <div class="filters" role="group" aria-label="Filtrar">${filters.map(([k,t,f])=>`<button class="chip" data-act="filter" data-val="${k}" aria-pressed="${S.filter===k}">${t} · ${cnt(f)}</button>`).join("")}</div>
+    <div class="split ${sel?"":"nodetail"}">
+      <div class="tablewrap"><table><thead><tr><th>Expediente</th><th>Contratante</th><th class="hide-m hide-d">Fallecido / beneficiario</th><th>Estado</th><th class="hide-m hide-d">Progreso</th><th class="hide-m">Actividad</th></tr></thead>
+      <tbody>${rows.length?rows.map(e=>{const [t,c]=estado(e);return `<tr data-act="sel" data-val="${e.id}" aria-selected="${S.sel===e.id}" tabindex="0">
+        <td><b>${e.id}</b>${e.live?'<span class="livebadge">En curso</span>':""}<span class="sub"><span class="mode ${e.mode==="inmediato"?"inm":"prev"}">${e.mode==="inmediato"?"Inmediato":"Previsión"}</span> · ${ZONAS[e.zona]?.prov||"—"}</span></td>
+        <td>${esc(e.c.nombre)} ${esc(e.c.apellidos)}<span class="sub">${esc(e.c.relacion||"")}</span></td>
+        <td class="hide-m hide-d">${esc(e.f.nombre)} ${esc(e.f.apellidos)}</td>
+        <td><span class="pill ${c}">${t}</span></td>
+        <td class="hide-m hide-d"><div class="mini"><div class="bar sm"><i style="width:${pct(e)}%"></i></div><small>${pct(e)}%</small></div></td>
+        <td class="hide-m num" style="color:var(--ink-3)">${esc(e.updated)}</td></tr>`;}).join(""):`<tr><td colspan="6" class="empty">No hay expedientes con este filtro.</td></tr>`}</tbody></table></div>
+      ${sel?detail(sel):""}
+    </div>`;
+  return `<div class="admin">
+    <aside class="side"><div class="who"><span class="avatar">MR</span><div><strong>Marta Ruiz</strong><small>Gestora · Funely</small></div></div>
+      <nav aria-label="Secciones">
+        <button data-act="atab" data-val="exp" aria-current="${S.adminTab==="exp"}">${I.folder} Expedientes <span class="count">${cnt(e=>!e.activado)}</span></button>
+        <button data-act="atab" data-val="tarifas" aria-current="${S.adminTab==="tarifas"}">${I.map} Zonas y tarifas</button>
+      </nav></aside>
+    <main class="main">${main}</main></div>`;
+}
+function detail(e){
+  const [t,c]=estado(e), z=ZONAS[e.zona];
+  const dniRow=(who,label,st,reason)=>{
+    const pill = st==="validado"?'<span class="pill ok">Validado</span>':st==="subido"?'<span class="pill info">Por revisar</span>':st==="rechazado"?'<span class="pill err">Rechazado</span>':'<span class="pill warn">Pendiente</span>';
+    const rk=e.id+who;
+    return `<div class="drow"><span style="color:var(--teal)">${I.id}</span><span class="nm">${label}${st==="rechazado"?`<small>${esc(reason)}</small>`:st==="pendiente"?"<small>La familia aún no lo ha subido</small>":""}</span>${pill}
+      ${st==="subido"?`<button class="btn sm secondary" data-act="validar" data-who="${who}">Validar</button><button class="btn sm outline" data-act="rechazar" data-who="${who}">Rechazar</button>`:""}</div>
+      ${S.reject===rk?`<div class="reasons" role="group" aria-label="Motivo del rechazo">${["La foto no se lee bien","El documento está caducado","No coincide con los datos","Falta una cara"].map(r=>`<button class="chip" data-act="rechazo" data-who="${who}" data-val="${r}">${r}</button>`).join("")}</div>`:""}`;};
+  return `<section class="detail" aria-label="Detalle del expediente">
+    <div class="dhead"><div class="top"><span class="id">${e.id}</span><span class="pill ${c}">${t}</span><button class="iconbtn" style="margin-left:auto;width:36px;height:36px" data-act="sel" data-val="" aria-label="Cerrar detalle">✕</button></div>
+      <div class="mini"><div class="bar sm"><i style="width:${pct(e)}%"></i></div><small>${pct(e)}%</small></div>
+      <div class="dactions">
+        ${!ready(e)&&!e.activado?`<button class="btn sm primary" data-act="recordar">${I.chat} Enviar recordatorio</button>`:""}
+        ${ready(e)&&!e.activado?`<button class="btn sm primary" data-act="adminActivar">Activar en su nombre</button>`:""}
+        <button class="btn sm outline" data-act="toast" data-val="Llamando a ${esc(e.c.nombre)}…">${I.phone} Llamar</button>
+      </div></div>
+    <div class="dsec"><h4>Servicio</h4><dl class="dkv"><dt>Modalidad</dt><dd>${e.mode==="inmediato"?"Inmediato":"Previsión"}</dd><dt>Zona</dt><dd>${z.prov} · CP ${esc(e.cp)}</dd><dt>Tanatorio</dt><dd>${esc(z.tan.n)}</dd><dt>Crematorio</dt><dd>${esc(z.crem)}</dd><dt>PVP</dt><dd>${fmt(z.pvp,2)} €</dd>${e.activado?`<dt>Pago</dt><dd>${esc(e.pago)}</dd>`:""}</dl></div>
+    <div class="dsec"><h4>Contratante</h4><dl class="dkv"><dt>Nombre</dt><dd>${esc(e.c.nombre)} ${esc(e.c.apellidos)}</dd><dt>DNI</dt><dd>${esc(e.c.dni)}</dd><dt>Relación</dt><dd>${esc(e.c.relacion)}</dd><dt>Teléfono</dt><dd>${esc(e.contacto?.tel||e.c.tel)}</dd></dl></div>
+    <div class="dsec"><h4>${e.mode==="inmediato"||e.activado?"Persona fallecida":"Persona beneficiaria"}</h4><dl class="dkv"><dt>Nombre</dt><dd>${esc(e.f.nombre)} ${esc(e.f.apellidos)}</dd><dt>DNI</dt><dd>${esc(e.f.dni)}</dd>${e.f.lugarTipo?`<dt>Lugar</dt><dd>${esc(e.f.lugarTipo)}${e.f.lugar?" · "+esc(e.f.lugar):""}</dd>`:""}${e.f.fecha?`<dt>Fecha</dt><dd>${esc(e.f.fecha)} ${esc(e.f.hora||"")}</dd>`:""}</dl></div>
+    <div class="dsec"><h4>Documentación</h4>
+      ${["Contrato de servicios","Autorización general","Solicitud de incineración"].map(d=>`<div class="drow"><span style="color:var(--teal)">${I.doc}</span><span class="nm">${d}<small>${e.signed?"Firmado con Signaturit":"Generado · pendiente de firma"}</small></span><span class="pill ${e.signed?"ok":"neutral"}">${e.signed?"Firmado":"Sin firmar"}</span></div>`).join("")}
+      ${dniRow("C","DNI del contratante",e.dniC,e.dniCR)}
+      ${dniRow("F","DNI del fallecido",e.dniF,e.dniFR)}
+    </div>
+    <div class="dsec"><h4>Salesforce</h4><div class="sf">
+      ${e.activado?`<div><span class="ok">${I.check}</span>Cuenta declarante <code>001Qy00000Ab12C</code></div><div><span class="ok">${I.check}</span>Cuenta difunto <code>001Qy00000Ab12D</code></div><div><span class="ok">${I.check}</span>Caso · Servicio integral <code>500Qy00000Fn8aK</code></div><div><span class="ok">${I.check}</span>5 documentos adjuntos</div>`
+      :`<div class="pend">${I.cloud} Se enviará automáticamente al activar el servicio.</div><div class="pend">${I.check} Cuentas de difunto y declarante: ${e.done.f?"datos completos":"faltan datos"}</div>`}</div></div>
+    <div class="dsec"><h4>Actividad</h4><ol class="tl">${e.timeline.length?e.timeline.map(([t,x])=>`<li><time>${esc(t)}</time><span>${esc(x)}</span></li>`).join(""):"<li><time>—</time><span>Sin actividad</span></li>"}</ol></div>
+  </section>`;
+}
+function tarifas(){
+  return `<div class="mainhead"><div><h1 class="h2">Zonas y tarifas</h1><p>El código postal decide precio, tanatorio y crematorio, y los datos fiscales que aparecen en la autorización.</p></div></div>
+  <div class="tablewrap"><table><thead><tr><th>Provincia</th><th>Códigos postales</th><th>PVP (IVA incl.)</th><th>Tanatorio y sociedad</th><th>Crematorio</th><th>Plantilla</th></tr></thead><tbody>
+  ${Object.entries(ZONAS).map(([k,z])=>`<tr><td><b>${z.prov}</b></td><td class="num">${k}000 – ${k}999</td><td class="num"><b>${fmt(z.pvp,2)} €</b></td><td>${esc(z.tan.n)}<span class="sub">${esc(z.tan.soc)} · ${esc(z.tan.cif)}</span></td><td>${esc(z.crem)}</td><td><span class="pill ok">Logo y datos fiscales</span></td></tr>`).join("")}
+  </tbody></table></div>
+  <p class="hint">Tanatorios, sociedades y precios distintos de Madrid son datos de ejemplo.</p>`;
+}
+
+function render(){
+  const app=document.getElementById("app"); app.classList.toggle("u",S.view==="user");
+  const keepScroll = document.getElementById("scroll")?.scrollTop||0;
+  const same = render.last===S.view+S.screen;
+  app.innerHTML = `
+  <header class="topbar">${logo()}<span class="tag">Prototipo</span>
+    <div class="seg" role="group" aria-label="Vista">
+      <button data-act="view" data-val="user" aria-pressed="${S.view==="user"}">Familia · móvil</button>
+      <button data-act="view" data-val="admin" aria-pressed="${S.view==="admin"}">Gestor · escritorio</button>
+    </div>
+    <button class="ghost" data-act="reset">Reiniciar</button>
+  </header>
+  ${S.view==="user"?renderUser():renderAdmin()}`;
+  if(S.view==="user"){ const sc=document.getElementById("scroll"); if(sc&&same) sc.scrollTop=keepScroll; setupPad(); }
+  render.last=S.view+S.screen;
+}
+
+/* ======================= Firma ======================= */
+function setupPad(){
+  const cv=document.getElementById("pad"); if(!cv) return;
+  const r=cv.getBoundingClientRect(), dpr=window.devicePixelRatio||1;
+  cv.width=r.width*dpr; cv.height=r.height*dpr;
+  const ctx=cv.getContext("2d"); ctx.scale(dpr,dpr); ctx.lineWidth=2.6; ctx.lineCap="round"; ctx.lineJoin="round"; ctx.strokeStyle="#1F2C6B";
+  if(S.sigImg){const im=new Image();im.onload=()=>ctx.drawImage(im,0,0,r.width,r.height);im.src=S.sigImg;}
+  let drawing=false,last=null;
+  const pos=ev=>{const b=cv.getBoundingClientRect();return [ev.clientX-b.left,ev.clientY-b.top];};
+  cv.addEventListener("pointerdown",ev=>{drawing=true;last=pos(ev);cv.setPointerCapture(ev.pointerId);});
+  cv.addEventListener("pointermove",ev=>{if(!drawing)return;const p=pos(ev);ctx.beginPath();ctx.moveTo(...last);ctx.lineTo(...p);ctx.stroke();last=p;
+    if(!S.hasSig){S.hasSig=true;updateCta();}});
+  const end=()=>{if(drawing){drawing=false;S.sigImg=cv.toDataURL("image/png");}};
+  cv.addEventListener("pointerup",end); cv.addEventListener("pointercancel",end);
+}
+
+/* ======================= Interacción ======================= */
+function setPath(path,val){
+  if(path.startsWith("$")){S[path.slice(1)]=val;return;}
+  const parts=path.split("."); let o=E(); while(parts.length>1) o=o[parts.shift()]; o[parts[0]]=val;
+}
+function updateCta(){
+  const b=document.querySelector("[data-cta]"); if(!b) return;
+  const s=SCREENS[S.screen](); b.disabled=!s.cta.ok();
+}
+function toast(msg){ S.toast=msg; render(); clearTimeout(toast.t); toast.t=setTimeout(()=>{S.toast=null;render();},2600); }
+function go(to){ S.screen=to; S.docOpen=null; render(); const sc=document.getElementById("scroll"); if(sc) sc.scrollTop=0; }
+function ensureDemo(to){
+  // Al saltar desde el índice, completa lo previo con datos de ejemplo para que la pantalla tenga sentido.
+  const e=E(), order=FLOW.map(f=>f[0]), i=order.indexOf(to);
+  if(i>=1&&!e.zona){e.zona="28";}
+  if(i>=2&&!e.mode){e.mode="prevision";}
+  if(i>=3&&!e.done.contacto){e.contacto.priv=true;e.done.contacto=true;log(e,"Área privada creada");}
+  if(i>=4) e.done.c=true;
+  if(i>=5) e.done.f=true;
+  if(i>=6){e.checks={a:true,b:true,c:true};}
+  if(i>=7&&!e.signed){e.signed=true;e.firmaFecha=todayEs();log(e,"Documentos firmados con Signaturit");}
+  if(i>=9){ if(!dniOk(e.dniC))e.dniC="subido"; if(!dniOk(e.dniF))e.dniF="subido"; }
+  if(i>=10&&!e.activado){ if(!e.f.fecha)e.f.fecha=today(); if(!e.f.lugarTipo)e.f.lugarTipo="Hospital"; activar(); return true;}
+  return false;
+}
+function activar(e=E(),who="cliente"){
+  e.activado=true; e.actFecha=todayEs(); if(!e.f.fecha)e.f.fecha=today();
+  log(e,(who==="cliente"?"Servicio activado por la familia":"Servicio activado por la gestora")+" · pago: "+e.pago);
+  log(e,"Fecha añadida a autorización general y solicitud de incineración");
+  log(e,"Enviado a Salesforce · cuentas y caso creados");
+}
+const findExp = id => allExp().find(e=>e.id===id);
+
+document.addEventListener("click",ev=>{
+  const t=ev.target.closest("[data-act]"); if(!t||t.disabled) return;
+  const a=t.dataset.act, v=t.dataset.val, e=E();
+  switch(a){
+    case "view": S.view=v; render(); break;
+    case "reset": reset(); render(); break;
+    case "jump": if(!ensureDemo(t.dataset.to)) go(t.dataset.to); else go("activado"); break;
+    case "go": go(t.dataset.to); break;
+    case "toast": toast(v); break;
+    case "set": setPath(t.dataset.path,v); render(); break;
+    case "mode": e.mode=v; render(); break;
+    case "verPrecio": { const z=ZONAS[e.cp.slice(0,2)]; if(!z){S.cpErr=true;render();} else {S.cpErr=false;e.zona=e.cp.slice(0,2);go("presupuesto");} break; }
+    case "crearCuenta": e.done.contacto=true; log(e,"Área privada creada · presupuesto "+fmt(Z().pvp)+" € ("+(e.mode==="inmediato"?"inmediato":"previsión")+")"); toast("Te hemos enviado el presupuesto por email."); go("contratante"); break;
+    case "scan": if(t.dataset.who==="C"){e.scanC=true;e.dniC="subido";log(e,"DNI del contratante subido (escaneo)");} else {e.scanF=true;e.dniF="subido";log(e,"DNI del fallecido subido (escaneo)");} toast("Datos leídos del DNI. Revísalos."); break;
+    case "saveC": e.done.c=true; log(e,"Datos del contratante completados"); go("fallecido"); break;
+    case "saveF": e.done.f=true; log(e,"Datos de "+fname(e)+" completados · documentos generados"); go("revision"); break;
+    case "doc": S.docOpen = S.docOpen===v?null:v; render(); break;
+    case "clearSig": S.hasSig=false; S.sigImg=null; render(); break;
+    case "firmar": e.signed=true; e.firmaFecha=todayEs(); e.sig=S.sigImg; log(e,"3 documentos firmados con Signaturit"); toast("Documentos firmados. Te enviamos una copia."); go(ready(e)?"area":"dni"); break;
+    case "sample": if(t.dataset.who==="C"){e.dniC="subido";e.dniCR="";} else {e.dniF="subido";e.dniFR="";} log(e,(t.dataset.who==="C"?"DNI del contratante":"DNI del fallecido")+" subido"); toast("Foto recibida. La revisaremos en breve."); break;
+    case "activar": activar(); go("activado"); break;
+    /* admin */
+    case "atab": S.adminTab=v; render(); break;
+    case "filter": S.filter=v; render(); break;
+    case "sel": S.sel=v||null; S.reject=null; render(); break;
+    case "validar": { const x=findExp(S.sel); x[t.dataset.who==="C"?"dniC":"dniF"]="validado"; log(x,(t.dataset.who==="C"?"DNI del contratante":"DNI del fallecido")+" validado por Marta R."); render(); break; }
+    case "rechazar": S.reject = S.reject===S.sel+t.dataset.who?null:S.sel+t.dataset.who; render(); break;
+    case "rechazo": { const x=findExp(S.sel), w=t.dataset.who; x[w==="C"?"dniC":"dniF"]="rechazado"; x[w==="C"?"dniCR":"dniFR"]=v; S.reject=null; log(x,(w==="C"?"DNI del contratante":"DNI del fallecido")+" rechazado: "+v.toLowerCase()); log(x,"Aviso enviado a la familia por WhatsApp y email"); toast2("Rechazado. La familia ya tiene el aviso en su área privada."); break; }
+    case "recordar": { const x=findExp(S.sel); log(x,"Recordatorio enviado por WhatsApp"); toast2("Recordatorio enviado por WhatsApp."); break; }
+    case "adminActivar": { const x=findExp(S.sel); if(!x.f.fecha)x.f.fecha=today(); if(!x.f.lugarTipo)x.f.lugarTipo="Hospital"; activar(x,"gestora"); toast2("Servicio activado y enviado a Salesforce."); break; }
+  }
+});
+function toast2(msg){ // aviso en la vista de gestor
+  render(); const d=document.createElement("div"); d.className="toast"; d.setAttribute("role","status"); d.style.cssText="position:fixed;left:auto;right:24px;bottom:24px;max-width:380px"; d.innerHTML=I.check+esc(msg); document.body.appendChild(d); setTimeout(()=>d.remove(),2800);
+}
+document.addEventListener("keydown",ev=>{ const r=ev.target.closest("tr[data-act]"); if(r&&(ev.key==="Enter"||ev.key===" ")){ev.preventDefault();r.click();} });
+document.addEventListener("input",ev=>{
+  const t=ev.target; if(!t.dataset.bind) return;
+  setPath(t.dataset.bind, t.type==="checkbox"?t.checked:t.value);
+  if(t.dataset.bind==="$q"){ const pos=t.selectionStart; render(); const q=document.getElementById("q"); q.focus(); q.setSelectionRange(pos,pos); return; }
+  if(t.dataset.bind==="cp") S.cpErr=false;
+  updateCta();
+});
+document.addEventListener("change",ev=>{
+  const t=ev.target;
+  if(t.dataset.bind&&t.type==="checkbox"){ setPath(t.dataset.bind,t.checked); updateCta(); }
+  if(t.dataset.file&&t.files&&t.files[0]){ const w=t.dataset.file, e=E(); if(w==="C"){e.dniC="subido";e.dniCR="";} else {e.dniF="subido";e.dniFR="";} log(e,(w==="C"?"DNI del contratante":"DNI del fallecido")+" subido"); toast("Foto recibida. La revisaremos en breve."); }
+});
+render();
+</script>
+
+</body>
+</html>
